@@ -52,11 +52,3 @@ dev_dependencies:
   freezed: ^2.5.2
   json_serializable: ^6.8.0
   hive_generator: ^2.0.1
-  integration_test:
-    sdk: flutter
-  patrol: ^2.3.0
-
-flutter:
-  uses-material-design: true
-  assets:
-    - assets/
