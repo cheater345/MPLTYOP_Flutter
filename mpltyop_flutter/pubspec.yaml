@@ -17,10 +17,7 @@ dependencies:
   json_annotation: ^4.9.0
 
   # YouTube Music API (on-device via Chaquopy)
-  yt_flutter_musicapi:
-    git:
-      url: https://github.com/golanpiyush/yt_flutter_musicapi.git
-      ref: main
+  yt_flutter_musicapi: ^3.4.4  # from pub.dev
 
   # Playback
   just_audio: ^0.9.36
