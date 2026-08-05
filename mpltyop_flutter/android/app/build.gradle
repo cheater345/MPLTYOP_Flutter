@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'com.chaquo.python'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
@@ -41,17 +40,6 @@ android {
         }
         jniLibs {
             pickFirsts += ['lib/**/*.so']
-        }
-    }
-
-    // Chaquopy config
-    python {
-        version "3.11"
-        buildType "release"
-        pip {
-            install "ytmusicapi==1.8.0"
-            install "yt-dlp==2024.1.2"
-            install "requests==2.31.0"
         }
     }
 }
