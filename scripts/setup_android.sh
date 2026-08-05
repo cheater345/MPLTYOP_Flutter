@@ -10,20 +10,8 @@ flutter create . --platforms android
 # ================================================================
 # 1. Upgrade Gradle wrapper to 8.7 (compatible with AGP 8.7.3)
 # ================================================================
-flutter pub global activate gradle_wrapper 2>/dev/null || true
-# Use Flutter's built-in Gradle wrapper upgrade
-# Or manually update the Gradle wrapper
-python3 << 'PYEOF'
-with open('android/gradle/wrapper/gradle-wrapper.properties', 'r') as f:
-    content = f.read()
-content = content.replace(
-    'gradle-7.6.3-all',
-    'gradle-8.7-all'
-)
-with open('android/gradle/wrapper/gradle-wrapper.properties', 'w') as f:
-    f.write(content)
-print("Gradle wrapper upgraded to 8.7")
-PYEOF
+flutter pub global activate gradle_wrapper 2>/dev/null
+cd android && flutter pub global run gradle_wrapper --gradle-version 8.7 && cd ..
 
 # ================================================================
 # 2. Patch settings.gradle: update AGP version + add Chaquopy repo
@@ -40,26 +28,12 @@ content = content.replace(
 
 # Add Chaquopy repo to pluginManagement repositories
 if 'chaquo.com' not in content:
-    # Find pluginManagement repositories block
-    idx = content.find('pluginManagement {')
-    if idx != -1:
-        repos_idx = content.find('repositories {', idx)
-        if repos_idx != -1:
-            # Find the end of the repositories block in pluginManagement
-            gradle_plugin_portal_idx = content.find('gradlePluginPortal()', repos_idx)
-            if gradle_plugin_portal_idx != -1:
-                content = content[:repo_idx] + '        maven { url = uri("https://chaquo.com/maven") }\n' + content[repos_idx:]
-
-# Simpler: just replace mavenCentral() in the first repositories block
-# Actually, let's just add Chaquopy repo to the dependencyResolutionManagement
-if 'chaquo.com' not in content:
-    # Find the second repositories block (in dependencyResolutionManagement)
-    parts = content.split('repositories {')
-    if len(parts) > 2:
-        # Insert Chaquoo repo into the second repositories block
-        second_idx = content.find('repositories {', content.find('repositories {') + 1)
-        if second_idx != -1:
-            content = content[:second_idx + len('repositories {')] + '\n        maven { url = uri("https://chaquo.com/maven") }' + content[second_idx + len('repositories {'):]
+    # Find the first repositories block and add Chaquopy after google()
+    content = content.replace(
+        'google()\n',
+        'google()\n        maven { url = uri("https://chaquo.com/maven") }\n',
+        1
+    )
 
 with open('android/settings.gradle', 'w') as f:
     f.write(content)
@@ -70,10 +44,6 @@ PYEOF
 # 3. Patch project build.gradle: add Chaquopy repo + classpath
 # ================================================================
 python3 << 'PYEOF'
-with open('android/build.gradle', 'r') as f:
-    content = f.read()
-
-# Replace entire content with Chaquopy-enabled build.gradle
 new_content = '''buildscript {
     repositories {
         google()
