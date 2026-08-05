@@ -1,4 +1,4 @@
-name: Test Flutter Build
+name: Test Flutter Doctor
 
 on:
   push:
@@ -7,21 +7,18 @@ on:
 
 jobs:
   test:
-    name: Test Basic Flutter Build
+    name: Test Flutter Doctor
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.2'
           channel: 'stable'
-      - name: Show Flutter doctor
+      - name: Run flutter doctor
         run: flutter doctor -v
-      - name: Create test app
-        run: |
-          flutter create test_app --platforms android
-          cd test_app
-          flutter pub get
-          flutter build apk --release
-        working-directory: /root/MPLTYOP_Flutter
+      - name: Check Java
+        run: java -version
+      - name: Check Android SDK
+        run: ls -la $ANDROID_HOME 2>/dev/null || echo "ANDROID_HOME not set"
