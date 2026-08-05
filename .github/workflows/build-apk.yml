@@ -34,26 +34,11 @@ jobs:
       - name: Setup Android project with Chaquopy
         run: bash scripts/setup_android.sh
 
-      - name: Patch yt_flutter_musicapi plugin
-        run: |
-          PLUGIN_DIR=$(find /home/runner/.pub-cache/git/ -maxdepth 1 -name "yt_flutter_musicapi-*" 2>/dev/null | head -1)
-          echo "Plugin dir: $PLUGIN_DIR"
-          if [ -z "$PLUGIN_DIR" ]; then
-            echo "Plugin not found, searching..."
-            ls /home/runner/.pub-cache/git/
-            exit 1
-          fi
-          # Remove hardcoded Windows Python path
-          sed -i '/buildPython/d' "$PLUGIN_DIR/android/build.gradle"
-          echo "=== Patched plugin build.gradle ==="
-          cat "$PLUGIN_DIR/android/build.gradle"
-
       - name: Build APK
         run: |
           cd mpltyop_flutter
           flutter pub get
-          # Ensure .dart_tool is accessible from android directory
-          flutter build apk --release 2>&1 | tee build.log; EXIT=${PIPESTATUS[0]}; if [ $EXIT -ne 0 ]; then echo "BUILD FAILED"; echo "=== Error details ==="; cat build.log | grep -E "What went wrong|Caused by|error:|e:|FAILED|Exception|Execution failed" | head -20; exit 1; fi
+          flutter build apk --release 2>&1 | tee build.log; EXIT=${PIPESTATUS[0]}; if [ $EXIT -ne 0 ]; then echo "BUILD FAILED"; cat build.log | grep -E "What went wrong|Caused by|error:|e:|FAILED|Exception|Execution failed" | head -20; exit 1; fi
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
