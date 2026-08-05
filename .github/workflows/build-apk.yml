@@ -32,7 +32,7 @@ jobs:
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk" >> $GITHUB_ENV
 
       - name: Setup Android project with Chaquopy
-        run: bash ../scripts/setup_android.sh
+        run: bash scripts/setup_android.sh
 
       - name: Get dependencies
         run: flutter pub get
