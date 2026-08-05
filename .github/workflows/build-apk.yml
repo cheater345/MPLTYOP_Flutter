@@ -41,7 +41,7 @@ jobs:
       - name: Build APK
         run: |
           cd mpltyop_flutter
-          flutter build apk --release --split-per-abi -v 2>&1 | tail -80
+          flutter build apk --release --split-per-abi -v 2>&1 | tee build.log; EXIT=${PIPESTATUS[0]}; tail -100 build.log; if [ $EXIT -ne 0 ]; then echo "BUILD FAILED"; cat build.log | grep -E "What went wrong|Caused by|error:|e:|FAILED|Exception" | head -20; exit 1; fi
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
