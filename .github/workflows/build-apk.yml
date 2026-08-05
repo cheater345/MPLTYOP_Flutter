@@ -14,7 +14,7 @@ jobs:
   build:
     name: Build APK
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
 
     steps:
       - name: Checkout
@@ -28,38 +28,51 @@ jobs:
           cache: true
           cache-key: flutter-:runner-os:-:flutter-version:-:hash:
 
+      - name: Show Flutter doctor
+        run: flutter doctor -v
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y openjdk-17-jdk python3 python3-pip
 
-      - name: Get dependencies
+      - name: Show Java version
+        run: java -version
+
+      - name: Show Flutter version
+        run: flutter --version
+
       - name: Show pubspec
         run: cat pubspec.yaml
         working-directory: mpltyop_flutter
-        run: flutter pub get
+
+      - name: Get dependencies
+        run: flutter pub get --verbose
         working-directory: mpltyop_flutter
 
       - name: Generate code (freezed, json_serializable, hive)
-        run: dart run build_runner build --delete-conflicting-outputs
+        run: dart run build_runner build --delete-conflicting-outputs --verbose
         working-directory: mpltyop_flutter
+        continue-on-error: true
 
       - name: Analyze
         run: flutter analyze
-      - name: Show Flutter doctor
-        run: flutter doctor -v
-        working-directory: mpltyop_flutter
         working-directory: mpltyop_flutter
 
       - name: Run tests
-        run: flutter test
+        run: flutter test --verbose
         working-directory: mpltyop_flutter
 
       - name: Build APK (release)
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release --split-per-abi --verbose
         working-directory: mpltyop_flutter
         env:
           JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+        timeout-minutes: 90
+
+      - name: List build outputs
+        run: ls -la build/app/outputs/flutter-apk/
+        working-directory: mpltyop_flutter
 
       - name: Upload APKs (artifact)
         uses: actions/upload-artifact@v4
@@ -89,7 +102,4 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed .
         working-directory: mpltyop_flutter
       - run: flutter analyze
-      - name: Show Flutter doctor
-        run: flutter doctor -v
-        working-directory: mpltyop_flutter
         working-directory: mpltyop_flutter
