@@ -22,10 +22,10 @@ dependencies:
       url: https://github.com/golanpiyush/yt_flutter_musicapi.git
       ref: main
 
-  # Playback
-  just_audio: ^0.10.6
-  audio_service: ^0.18.19
-  just_audio_background: ^0.0.1-beta.17
+  # Playback (compatible with Dart 3.4.3 / Flutter 3.22.2)
+  just_audio: ^0.9.36
+  audio_service: ^0.18.9
+  just_audio_background: ^0.0.1-beta.11
 
   # Storage
   hive: ^2.2.3
