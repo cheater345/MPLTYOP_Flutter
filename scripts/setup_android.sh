@@ -92,7 +92,6 @@ python3 << 'PYEOF'
 new_app_content = '''apply plugin: "com.android.application"
 apply plugin: "kotlin-android"
 apply plugin: "com.chaquo.python"
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file("local.properties")
@@ -106,6 +105,8 @@ def flutterRoot = localProperties.getProperty("flutter.sdk")
 if (flutterRoot == null) {
     flutterRoot = "C:/flutter"
 }
+
+apply from: flutterRoot + "/packages/flutter_tools/gradle/flutter.gradle"
 
 def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
 if (flutterVersionCode == null) {
