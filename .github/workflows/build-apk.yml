@@ -51,8 +51,8 @@ jobs:
           sed -i '/buildPython/d' "$PLUGIN_DIR/android/build.gradle"
           # Align Chaquopy version with project (12.0.0 - latest on chaquo.com Maven)
           sed -i 's/classpath "com.chaquo.python:gradle:17.0.0"/classpath "com.chaquo.python:gradle:12.0.0"/' "$PLUGIN_DIR/android/build.gradle"
-          # Downgrade AGP to 8.1.0 (compatible with Gradle 7.6.3)
-          sed -i 's/classpath("com.android.tools.build:gradle:8.7.3")/classpath("com.android.tools.build:gradle:8.1.0")/' "$PLUGIN_DIR/android/build.gradle"
+          # Downgrade AGP to 8.0.2 (compatible with Gradle 7.6.3)
+          sed -i 's/classpath("com.android.tools.build:gradle:8.7.3")/classpath("com.android.tools.build:gradle:8.0.2")/' "$PLUGIN_DIR/android/build.gradle"
           # Downgrade Kotlin
           sed -i 's/ext.kotlin_version = "2.1.0"/ext.kotlin_version = "1.9.20"/' "$PLUGIN_DIR/android/build.gradle"
           # Use compileSdk 34 (compatible with AGP 8.1.0)

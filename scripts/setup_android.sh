@@ -16,14 +16,14 @@ python3 << 'PYEOF'
 with open('android/settings.gradle', 'r') as f:
     content = f.read()
 
-# Update AGP version to 8.7.0 (compatible with Gradle 8.x)
+# Update AGP version to 8.0.2 (compatible with Gradle 7.6.3)
 content = content.replace(
     'id "com.android.application" version "7.3.0" apply false',
-    'id "com.android.application" version "8.1.0" apply false'
+    'id "com.android.application" version "8.0.2" apply false'
 )
 content = content.replace(
     'id "com.android.library" version "7.3.0" apply false',
-    'id "com.android.library" version "8.1.0" apply false'
+    'id "com.android.library" version "8.0.2" apply false'
 )
 
 # Add Chaquopy repo to pluginManagement
@@ -50,7 +50,9 @@ new_content = '''buildscript {
         maven { url "https://chaquo.com/maven" }
     }
     dependencies {
+        classpath "com.android.tools.build:gradle:8.0.2"
         classpath "com.chaquo.python:gradle:12.0.0"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.20"
     }
 }
 
@@ -95,8 +97,8 @@ content = content.replace('JavaVersion.VERSION_1_8', 'JavaVersion.VERSION_11')
 # Change minSdk to 24 for Chaquopy
 content = content.replace('minSdk = flutter.minSdkVersion', 'minSdk = 24')
 
-# Update compileSdk to 35
-content = content.replace('compileSdk = flutter.compileSdkVersion', 'compileSdk = 35')
+# Update compileSdk to 34
+content = content.replace('compileSdk = flutter.compileSdkVersion', 'compileSdk = 34')
 
 # Add Chaquopy python config inside android block (after namespace)
 content = content.replace(
