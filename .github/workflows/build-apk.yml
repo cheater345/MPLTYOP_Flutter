@@ -1,26 +1,51 @@
-name: Test Flutter Build
+name: Build MPLTYOP APK
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'mpltyop_flutter/**'
+      - '.github/workflows/build-apk.yml'
   workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
-  test:
-    name: Test Flutter Build
+  build:
+    name: Build MPLTYOP APK
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
+
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.2'
           channel: 'stable'
-      - name: Run flutter doctor
+          cache: true
+
+      - name: Show Flutter doctor
         run: flutter doctor -v
-      - name: Create test app
-        run: flutter create test_app --platforms android
+
       - name: Get dependencies
-        run: cd test_app && flutter pub get
+        run: flutter pub get
+        working-directory: mpltyop_flutter
+
       - name: Build APK
-        run: cd test_app && flutter build apk --release
+        run: flutter build apk --release --split-per-abi
+        working-directory: mpltyop_flutter
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpltyop-apks
+          path: mpltyop_flutter/build/app/outputs/flutter-apk/*.apk
+          retention-days: 30
+
+      - name: Release APK
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: mpltyop_flutter/build/app/outputs/flutter-apk/*.apk
+          generate_release_notes: true
+          tag_name: ${{ github.ref_name }}
