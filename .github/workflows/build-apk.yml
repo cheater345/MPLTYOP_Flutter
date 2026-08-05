@@ -1,25 +1,51 @@
-name: Debug Pub Get
+name: Build MPLTYOP APK
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'mpltyop_flutter/**'
+      - '.github/workflows/build-apk.yml'
   workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
-  test:
+  build:
+    name: Build APK
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 60
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.2'
           channel: 'stable'
           cache: true
-      - name: Run flutter doctor
+
+      - name: Flutter doctor
         run: flutter doctor -v
-      - name: Try flutter pub get in root
-        run: flutter pub get
-      - name: Try flutter pub get in mpltyop_flutter
+
+      - name: Fill in missing Flutter Android files
+        run: |
+          cd mpltyop_flutter
+          flutter create . --platforms android
+          echo "Flutter create done"
+        working-directory: .
+
+      - name: Get dependencies
         run: flutter pub get
         working-directory: mpltyop_flutter
+
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi
+        working-directory: mpltyop_flutter
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpltyop-apks
+          path: mpltyop_flutter/build/app/outputs/flutter-apk/*.apk
+          retention-days: 30
