@@ -14,7 +14,7 @@ jobs:
   build:
     name: Build APK
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - uses: actions/checkout@v4
@@ -25,15 +25,13 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Flutter doctor
-        run: flutter doctor -v
+      - name: Generate Android project files
+        run: flutter create . --platforms android
+        working-directory: mpltyop_flutter
 
-      - name: Fill in missing Flutter Android files
-        run: |
-          cd mpltyop_flutter
-          flutter create . --platforms android
-          echo "Flutter create done"
-        working-directory: .
+      - name: Show generated build.gradle
+        run: cat android/app/build.gradle
+        working-directory: mpltyop_flutter
 
       - name: Get dependencies
         run: flutter pub get
@@ -49,3 +47,11 @@ jobs:
           name: mpltyop-apks
           path: mpltyop_flutter/build/app/outputs/flutter-apk/*.apk
           retention-days: 30
+
+      - name: Release APK
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: mpltyop_flutter/build/app/outputs/flutter-apk/*.apk
+          generate_release_notes: true
+          tag_name: ${{ github.ref_name }}
