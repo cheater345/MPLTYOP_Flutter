@@ -16,10 +16,16 @@ dependencies:
   freezed_annotation: ^2.4.1
   json_annotation: ^4.9.0
 
+  # YouTube Music API (on-device via Chaquopy)
+  yt_flutter_musicapi:
+    git:
+      url: https://github.com/golanpiyush/yt_flutter_musicapi.git
+      ref: main
+
   # Playback
-  just_audio: ^0.9.36
-  audio_service: ^0.18.12
-  just_audio_background: ^0.0.1-beta.11
+  just_audio: ^0.10.6
+  audio_service: ^0.18.19
+  just_audio_background: ^0.0.1-beta.17
 
   # Storage
   hive: ^2.2.3
@@ -37,7 +43,6 @@ dependencies:
   google_fonts: ^6.2.1
   cached_network_image: ^3.3.1
   shimmer: ^3.0.0
-  slate: ^0.5.0
 
 dev_dependencies:
   flutter_test:
