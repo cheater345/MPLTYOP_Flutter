@@ -7,47 +7,91 @@ cd "$(dirname "$0")/../mpltyop_flutter"
 rm -rf android
 flutter create . --platforms android
 
-# Update project build.gradle: add Chaquopy repo + classpath
-sed -i 's|mavenCentral()|mavenCentral()\n        maven { url "https://chaquo.com/maven" }|' android/build.gradle
-sed -i '/classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:/a\        classpath "com.chaquo.python:gradle:12.0.0"' android/build.gradle
+# ================================================================
+# 1. Patch settings.gradle: add Chaquopy repo + classpath via pluginManagement
+# ================================================================
+python3 << 'PYEOF'
+with open('android/settings.gradle', 'r') as f:
+    content = f.read()
 
-# Add Chaquopy plugin to app build.gradle
-sed -i "/apply plugin: 'com.android.application'/a apply plugin: 'com.chaquo.python'" android/app/build.gradle
+if 'chaquo.com' not in content:
+    content = '''pluginManagement {
+    buildscript {
+        repositories {
+            gradlePluginPortal()
+            google()
+            mavenCentral()
+            maven { url = uri("https://chaquo.com/maven") }
+        }
+        dependencies {
+            classpath("com.chaquo.python:gradle:12.0.0")
+        }
+    }
+}
 
-# Add Chaquopy python config + multidex using Python
+''' + content
+
+with open('android/settings.gradle', 'w') as f:
+    f.write(content)
+print("settings.gradle patched")
+PYEOF
+
+# ================================================================
+# 2. Patch project build.gradle: add Chaquopy to allprojects repos
+# ================================================================
+sed -i 's|mavenCentral()|mavenCentral()\n        maven { url "https://chaquo.com/maven" }|g' android/build.gradle
+
+# ================================================================
+# 3. Patch app build.gradle
+# ================================================================
 python3 << 'PYEOF'
 with open('android/app/build.gradle', 'r') as f:
     content = f.read()
 
-# Add Chaquopy python block after namespace
-old_ns = 'namespace "com.cheater345.mpltyop"'
-new_ns = '''namespace "com.cheater345.mpltyop"
+# Fix namespace and applicationId
+content = content.replace('com.example.mpltyop_flutter', 'com.cheater345.mpltyop')
+
+# Add Chaquopy plugin after kotlin-android
+content = content.replace(
+    'id "kotlin-android"',
+    'id "kotlin-android"\n    id "com.chaquo.python"'
+)
+
+# Add Chaquopy python config + multidex after namespace line
+content = content.replace(
+    'namespace = "com.cheater345.mpltyop"',
+    '''namespace = "com.cheater345.mpltyop"
 
     python {
-        version "3.11"
-        buildType "release"
+        version = "3.11"
+        buildType = "release"
         pip {
             install "ytmusicapi==1.8.0"
             install "yt-dlp==2024.1.2"
             install "requests==2.31.0"
         }
     }'''
-content = content.replace(old_ns, new_ns)
+)
 
-# Ensure multidex
-if 'multidex' not in content:
-    content = content.replace(
-        'implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.20"',
-        'implementation "androidx.multidex:multidex:2.0.1"\n    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.20"'
-    )
+# Change Java version to 11 (for Chaquopy compatibility)
+content = content.replace('JavaVersion.VERSION_1_8', 'JavaVersion.VERSION_11')
+
+# Change minSdk to 24 for Chaquopy
+content = content.replace(
+    'minSdk = flutter.minSdkVersion',
+    'minSdk = 24'
+)
 
 with open('android/app/build.gradle', 'w') as f:
     f.write(content)
-print("Chaquopy + multidex added successfully")
+print("app build.gradle patched")
 PYEOF
 
-echo "=== Project build.gradle ==="
+echo "=== settings.gradle ==="
+cat android/settings.gradle
+echo ""
+echo "=== project build.gradle ==="
 cat android/build.gradle
 echo ""
-echo "=== App build.gradle ==="
+echo "=== app build.gradle ==="
 cat android/app/build.gradle
