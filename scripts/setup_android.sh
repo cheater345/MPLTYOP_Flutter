@@ -8,17 +8,34 @@ rm -rf android
 flutter create . --platforms android
 
 # ================================================================
-# 1. Patch settings.gradle: add Chaquopy repo + classpath via pluginManagement
+# 1. Patch settings.gradle: add Chaquopy to existing pluginManagement block
 # ================================================================
 python3 << 'PYEOF'
 with open('android/settings.gradle', 'r') as f:
     content = f.read()
 
+# Check if Chaquopy is already referenced
 if 'chaquo.com' not in content:
-    content = '''pluginManagement {
+    # Find the existing pluginManagement block's repositories and add Chaquopy repo there
+    # The Flutter-generated settings.gradle has:
+    # pluginManagement {
+    #     repositories {
+    #         google()
+    #         mavenCentral()
+    #         gradlePluginPortal()
+    #     }
+    # }
+    # We need to add Chaquopy repo + classpath to the buildscript
+    
+    # Add a buildscript block with Chaquopy classpath before the existing pluginManagement
+    # Actually, we need to merge into existing pluginManagement
+    # The approach: find the first 'pluginManagement {' and inject buildscript inside it
+    
+    content = content.replace(
+        'pluginManagement {\n    def flutterSdkPath = {',
+        '''pluginManagement {
     buildscript {
         repositories {
-            gradlePluginPortal()
             google()
             mavenCentral()
             maven { url = uri("https://chaquo.com/maven") }
@@ -27,9 +44,10 @@ if 'chaquo.com' not in content:
             classpath("com.chaquo.python:gradle:12.0.0")
         }
     }
-}
 
-''' + content
+    def flutterSdkPath = {''',
+        1  # Only replace first occurrence
+    )
 
 with open('android/settings.gradle', 'w') as f:
     f.write(content)
@@ -57,7 +75,7 @@ content = content.replace(
     'id "kotlin-android"\n    id "com.chaquo.python"'
 )
 
-# Add Chaquopy python config + multidex after namespace line
+# Add Chaquopy python config after namespace line
 content = content.replace(
     'namespace = "com.cheater345.mpltyop"',
     '''namespace = "com.cheater345.mpltyop"
