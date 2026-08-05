@@ -1,0 +1,86 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mpltyop_flutter/**'
+      - '.github/workflows/build-apk.yml'
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+          channel: 'stable'
+          cache: true
+          cache-key: flutter-:runner-os:-:flutter-version:-:hash:
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk python3 python3-pip
+
+      - name: Get dependencies
+        run: flutter pub get
+        working-directory: mpltyop_flutter
+
+      - name: Generate code (freezed, json_serializable, hive)
+        run: dart run build_runner build --delete-conflicting-outputs
+        working-directory: mpltyop_flutter
+
+      - name: Analyze
+        run: flutter analyze
+        working-directory: mpltyop_flutter
+
+      - name: Run tests
+        run: flutter test
+        working-directory: mpltyop_flutter
+
+      - name: Build APK (release)
+        run: flutter build apk --release --split-per-abi
+        working-directory: mpltyop_flutter
+        env:
+          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+
+      - name: Upload APKs (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpltyop-apks
+          path: mpltyop_flutter/build/app/outputs/flutter-apk/*.apk
+          retention-days: 30
+
+      - name: Release APK
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: mpltyop_flutter/build/app/outputs/flutter-apk/*.apk
+          generate_release_notes: true
+          tag_name: ${{ github.ref_name }}
+
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+      - run: flutter pub get
+        working-directory: mpltyop_flutter
+      - run: dart format --output=none --set-exit-if-changed .
+        working-directory: mpltyop_flutter
+      - run: flutter analyze
+        working-directory: mpltyop_flutter

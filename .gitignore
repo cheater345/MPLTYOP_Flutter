@@ -1,0 +1,82 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+*.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+
+# Android
+.gradle/
+local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+*.jks
+*.keystore
+*.iml
+*.log
+*.orig
+.gradle/
+.idea/
+.gradle/
+app/build/
+app/.gradle/
+app/.cxx/
+app/local.properties
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+*.xcworkspace
+!ios/Runner.xcworkspace
+ios/Runner.xcodeproj/xcuserdata/
+ios/Runner.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Build
+build/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+*.o
+*.so
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Generated
+*.g.dart
+*.freezed.dart
+*.config.dart
+lib/**/*.g.dart
+lib/**/*.freezed.dart
+
+# Local
+*.local.dart
+local.properties
+
+# Logs
+*.log
+*.log.*
+
+# Coverage
+coverage/
+*.lcov
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini

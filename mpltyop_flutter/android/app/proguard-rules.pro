@@ -1,0 +1,10 @@
+-keep class com.chaquo.python.** { *; }
+-keep class org.chacopy.python.** { *; }
+-keep class org.python.** { *; }
+-keep class com.ryanheise.** { *; }
+-keep class com.google.gson.** { *; }
+-keep class com.squareup.** { *; }
+-keep class io.flutter.** { *; }
+-dontwarn com.chaquo.python.**
+-dontwarn org.python.**
+-dontwarn com.ryanheise.**
