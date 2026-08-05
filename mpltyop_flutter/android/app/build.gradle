@@ -57,21 +57,23 @@ android {
         }
     }
 
-    python {
-        version = "3.11"
-        pip {
-            install "ytmusicapi==1.8.0"
-            install "yt-dlp==2024.1.2"
-            install "requests==2.31.0"
-        }
-    }
-
     packagingOptions {
         resources {
             excludes += '/META-INF/{LICENSE,NOTICE,DEPENDENCIES,README*,CHANGELOG*}'
         }
         jniLibs {
             pickFirsts += ['lib/**/*.so']
+        }
+    }
+}
+
+python {
+    defaultConfig {
+        version = "3.11"
+        pip {
+            install "ytmusicapi==1.8.0"
+            install "yt-dlp==2024.1.2"
+            install "requests==2.31.0"
         }
     }
 }
