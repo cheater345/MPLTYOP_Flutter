@@ -52,6 +52,9 @@ jobs:
         run: |
           cd mpltyop_flutter
           flutter pub get
+          # Ensure .dart_tool is accessible from android directory
+          # Copy .dart_tool to android directory for Flutter build
+          cp -r .dart_tool android/.dart_tool 2>/dev/null || true
           flutter build apk --release 2>&1 | tee build.log; EXIT=${PIPESTATUS[0]}; if [ $EXIT -ne 0 ]; then echo "BUILD FAILED"; echo "=== Error details ==="; cat build.log | grep -E "What went wrong|Caused by|error:|e:|FAILED|Exception|Execution failed" | head -20; exit 1; fi
 
       - name: Upload APKs
