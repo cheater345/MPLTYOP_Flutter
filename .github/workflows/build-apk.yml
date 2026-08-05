@@ -34,10 +34,6 @@ jobs:
       - name: Setup Android project with Chaquopy
         run: bash scripts/setup_android.sh
 
-      - name: Get dependencies
-        run: flutter pub get
-        working-directory: mpltyop_flutter
-
       - name: Patch yt_flutter_musicapi plugin
         run: |
           PLUGIN_DIR=$(find /home/runner/.pub-cache/git/ -maxdepth 1 -name "yt_flutter_musicapi-*" 2>/dev/null | head -1)
@@ -55,6 +51,7 @@ jobs:
       - name: Build APK
         run: |
           cd mpltyop_flutter
+          flutter pub get
           flutter build apk --release 2>&1 | tee build.log; EXIT=${PIPESTATUS[0]}; if [ $EXIT -ne 0 ]; then echo "BUILD FAILED"; echo "=== Error details ==="; cat build.log | grep -E "What went wrong|Caused by|error:|e:|FAILED|Exception|Execution failed" | head -20; exit 1; fi
 
       - name: Upload APKs
