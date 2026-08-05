@@ -165,7 +165,6 @@ android {
 chaquopy {
     defaultConfig {
         version = "3.11"
-        buildType = "release"
         pip {
             install "ytmusicapi==1.8.0"
             install "yt-dlp==2024.1.2"
