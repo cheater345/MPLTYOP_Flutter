@@ -10,8 +10,24 @@ flutter create . --platforms android
 # ================================================================
 # 1. Upgrade Gradle wrapper to 8.7 (compatible with AGP 8.7.3)
 # ================================================================
-flutter pub global activate gradle_wrapper 2>/dev/null
-cd android && flutter pub global run gradle_wrapper --gradle-version 8.7 && cd ..
+# Use Gradle wrapper directly
+chmod +x android/gradlew
+# Update gradle-wrapper.properties to use Gradle 8.7
+python3 << 'PYEOF'
+with open('android/gradle/wrapper/gradle-wrapper.properties', 'r') as f:
+    content = f.read()
+content = content.replace(
+    'gradle-7.6.3-all',
+    'gradle-8.7-all'
+)
+content = content.replace(
+    'gradle-7.6.3-bin',
+    'gradle-8.7-bin'
+)
+with open('android/gradle/wrapper/gradle-wrapper.properties', 'w') as f:
+    f.write(content)
+print("Gradle wrapper upgraded to 8.7")
+PYEOF
 
 # ================================================================
 # 2. Patch settings.gradle: update AGP version + add Chaquopy repo
