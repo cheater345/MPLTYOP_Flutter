@@ -77,7 +77,31 @@ python3 << 'PYEOF'
 new_app_content = '''apply plugin: "com.android.application"
 apply plugin: "kotlin-android"
 apply plugin: "com.chaquo.python"
-apply from: "$flutterRoot/packages/flutter_tool/gradle/flutter.gradle"
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader("UTF-8") { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterRoot = localProperties.getProperty("flutter.sdk")
+if (flutterRoot == null) {
+    flutterRoot = "C:/flutter"
+}
+
+apply from: flutterRoot + "/packages/flutter_tool/gradle/flutter.gradle"
+
+def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
+if (flutterVersionCode == null) {
+    flutterVersionCode = "1"
+}
+
+def flutterVersionName = localProperties.getProperty("flutter.versionName")
+if (flutterVersionName == null) {
+    flutterVersionName = "1.0.0"
+}
 
 android {
     namespace "com.cheater345.mpltyop"
@@ -101,8 +125,8 @@ android {
         applicationId "com.cheater345.mpltyop"
         minSdk 24
         targetSdk 34
-        versionCode 1
-        versionName "1.0.0"
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
         multiDexEnabled true
     }
 
@@ -128,10 +152,6 @@ python {
         install "yt-dlp==2024.1.2"
         install "requests==2.31.0"
     }
-}
-
-flutter {
-    source = ".."
 }
 
 dependencies {
