@@ -27,7 +27,7 @@ print("Gradle wrapper upgraded to 8.9")
 PYEOF
 
 # ================================================================
-# 2. Patch settings.gradle: update AGP version + add Chaquopy repo
+# 2. Patch settings.gradle: update AGP version + add Chaquopy
 # ================================================================
 python3 << 'PYEOF'
 with open('android/settings.gradle', 'r') as f:
@@ -38,13 +38,18 @@ content = content.replace(
     'id "com.android.application" version "7.3.0" apply false',
     'id "com.android.application" version "8.7.3" apply false'
 )
+content = content.replace(
+    'id "com.android.library" version "7.3.0" apply false',
+    'id "com.android.library" version "8.7.3" apply false'
+)
 
-# Add Chaquopy repo to pluginManagement repositories
+# Add Chaquopy to pluginManagement (for plugins DSL) + dependencyResolutionManagement (for repos)
 if 'chaquo.com' not in content:
-    # Find the first repositories block and add Chaquopy after google()
+    # Find pluginManagement repositories block and add Chaquopy repo
+    # The Flutter-generated settings.gradle has pluginManagement with google(), mavenCentral(), gradlePluginPortal()
     content = content.replace(
-        'google()\n',
-        'google()\n        maven { url = uri("https://chaquo.com/maven") }\n',
+        'google()\n        mavenCentral()\n        gradlePluginPortal()',
+        'google()\n        mavenCentral()\n        gradlePluginPortal()\n        maven { url = uri("https://chaquo.com/maven") }',
         1
     )
 
@@ -117,10 +122,10 @@ content = content.replace(
     'compileSdk = 35'
 )
 
-# Add Chaquopy plugin via apply (not plugins DSL)
+# Add Chaquopy to plugins block
 content = content.replace(
-    '}\n\ndef localProperties = new Properties()',
-    '}\n\napply plugin: "com.chaquo.python"\n\ndef localProperties = new Properties()'
+    'id "kotlin-android"',
+    'id "kotlin-android"\n    id "com.chaquo.python"'
 )
 
 # Add Chaquopy python config OUTSIDE the android block
