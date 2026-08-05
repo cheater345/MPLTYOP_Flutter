@@ -111,7 +111,7 @@ if (flutterRoot == null) {
     flutterRoot = "C:/flutter"
 }
 
-apply from: flutterRoot + "/packages/flutter_tool/gradle/flutter.gradle"
+apply from: flutterRoot + "/packages/flutter_tools/gradle/flutter.gradle"
 
 def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
 if (flutterVersionCode == null) {
