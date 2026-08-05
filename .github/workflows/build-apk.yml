@@ -25,58 +25,88 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Android project files
+      - name: Setup Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk" >> $GITHUB_ENV
+
+      - name: Generate Android project skeleton
         run: |
           cd mpltyop_flutter
-          # Remove android dir to get clean generated files
           rm -rf android
           flutter create . --platforms android
-          echo "=== Android dir structure ==="
-          find android -name "*.gradle" -o -name "gradlew" -o -name "*.kt" | sort
+          echo "=== Generated build.gradle ==="
+          cat android/build.gradle
+          echo ""
+          echo "=== Generated app build.gradle ==="
+          cat android/app/build.gradle
 
-      - name: Apply Chaquopy + custom Android config
+      - name: Write project build.gradle with Chaquopy
+        run: |
+          cd mpltyop_flutter
+          cat android/build.gradle
+
+      - name: Apply Chaquopy to build.gradle files
         run: |
           cd mpltyop_flutter
           
-          # 1. Add Chaquopy to project build.gradle
+          # Update project build.gradle: add Chaquopy maven repo + classpath
+          cat android/build.gradle
+          
+          # Add Chaquopy to project build.gradle
           sed -i 's|mavenCentral()|mavenCentral()\n        maven { url "https://chaquo.com/maven" }|' android/build.gradle
-          sed -i '/classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:/a\        classpath "com.chaquo.python:gradle:12.4.0"' android/build.gradle
+          sed -i '/classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:/a\        classpath "com.chaquo.python:gradle:12.0.0"' android/build.gradle
           
-          # 2. Add Chaquopy plugin to app build.gradle
-          sed -i '1s|apply plugin: '\''com.android.application'\''|apply plugin: '\''com.android.application'\''\napply plugin: '\''com.chaquo.python'\''|' android/app/build.gradle
+          echo "=== Modified project build.gradle ==="
+          cat android/build.gradle
           
-          # 3. Add Chaquopy config and dependencies using python
+          # Add Chaquopy plugin to app build.gradle (add after com.android.application)
+          sed -i '/apply plugin: '\''com.android.application'\''/a apply plugin: '\''com.chaquo.python'\''' android/app/build.gradle
+          
+          # Add Chaquopy python config using python
           python3 << 'PYEOF'
-import re
-
 with open('android/app/build.gradle', 'r') as f:
     content = f.read()
 
-# Add Chaquopy python config after namespace line
+# Add Chaquopy python block after namespace
 content = content.replace(
     'namespace "com.cheater345.mpltyop"',
-    'namespace "com.cheater345.mpltyop"\n\n    python {\n        version "3.11"\n        buildType "release"\n        pip {\n            install "ytmusicapi==1.8.0"\n            install "yt-dlp==2024.1.2"\n            install "requests==2.31.0"\n        }\n    }'
+    '''namespace "com.cheater345.mpltyop"
+
+    python {
+        version "3.11"
+        buildType "release"
+        pip {
+            install "ytmusicapi==1.8.0"
+            install "yt-dlp==2024.1.2"
+            install "requests==2.31.0"
+        }
+    }'''
 )
 
-# Add multidex dependency
-content = content.replace(
-    'implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.20"',
-    'implementation "androidx.multidex:multidex:2.0.1"\n    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.20"'
-)
+# Ensure multidex
+if 'multidex' not in content:
+    content = content.replace(
+        'implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.20"',
+        'implementation "androidx.multidex:multidex:2.0.1"\n    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.20"'
+    )
 
 with open('android/app/build.gradle', 'w') as f:
     f.write(content)
-
-print('Chaquopy + deps added')
+print("Done")
 PYEOF
+          
+          echo "=== Modified app build.gradle ==="
+          cat android/app/build.gradle
 
       - name: Get dependencies
         run: flutter pub get
         working-directory: mpltyop_flutter
 
       - name: Build APK
-        run: flutter build apk --release --split-per-abi
-        working-directory: mpltyop_flutter
+        run: |
+          cd mpltyop_flutter
+          flutter build apk --release --split-per-abi -v 2>&1 | tail -50
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
