@@ -16,14 +16,14 @@ python3 << 'PYEOF'
 with open('android/settings.gradle', 'r') as f:
     content = f.read()
 
-# Update AGP version to 8.0.2 (compatible with Gradle 7.6.3)
+# Update AGP version to 7.4.2 (compatible with Gradle 7.6.3)
 content = content.replace(
     'id "com.android.application" version "7.3.0" apply false',
-    'id "com.android.application" version "8.0.2" apply false'
+    'id "com.android.application" version "7.4.2" apply false'
 )
 content = content.replace(
     'id "com.android.library" version "7.3.0" apply false',
-    'id "com.android.library" version "8.0.2" apply false'
+    'id "com.android.library" version "7.4.2" apply false'
 )
 
 # Add Chaquopy repo to pluginManagement
@@ -50,7 +50,7 @@ new_content = '''buildscript {
         maven { url "https://chaquo.com/maven" }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:8.0.2"
+        classpath "com.android.tools.build:gradle:7.4.2"
         classpath "com.chaquo.python:gradle:12.0.0"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.20"
     }
