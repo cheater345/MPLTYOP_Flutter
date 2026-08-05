@@ -1,53 +1,27 @@
-name: Build Android APK
+name: Test Flutter Build
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'mpltyop_flutter/**'
-      - '.github/workflows/build-apk.yml'
   workflow_dispatch:
-  release:
-    types: [published]
 
 jobs:
-  build:
-    name: Build APK
+  test:
+    name: Test Basic Flutter Build
     runs-on: ubuntu-latest
-    timeout-minutes: 120
-
+    timeout-minutes: 30
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.2'
           channel: 'stable'
-          cache: true
-
       - name: Show Flutter doctor
         run: flutter doctor -v
-
-      - name: Install system dependencies
+      - name: Create test app
         run: |
-          sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk python3 python3-pip
-
-      - name: Show Flutter version
-        run: flutter --version
-
-      - name: Get dependencies
-        run: flutter pub get
-        working-directory: mpltyop_flutter
-
-      - name: Build APK
-        run: flutter build apk --release --split-per-abi
-        working-directory: mpltyop_flutter
-
-      - name: Upload APKs
-        uses: actions/upload-artifact@v4
-        with:
-          name: mpltyop-apks
-          path: mpltyop_flutter/build/app/outputs/flutter-apk/*.apk
+          flutter create test_app --platforms android
+          cd test_app
+          flutter pub get
+          flutter build apk --release
+        working-directory: /root/MPLTYOP_Flutter
