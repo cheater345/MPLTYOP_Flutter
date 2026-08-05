@@ -16,8 +16,8 @@ dependencies:
   freezed_annotation: ^2.4.1
   json_annotation: ^4.9.0
 
-  # YouTube Music API (on-device via Chaquopy)
-  yt_flutter_musicapi: ^3.4.4  # from pub.dev
+  # YouTube Music API (on-device via Chaquopy) - using pub.dev version
+  yt_flutter_musicapi: ^3.4.4
 
   # Playback
   just_audio: ^0.9.36
