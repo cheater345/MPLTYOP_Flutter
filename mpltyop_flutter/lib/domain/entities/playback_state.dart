@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:just_audio/just_audio.dart';
 import 'track.dart';
+import 'repeat_mode.dart';
 
 part 'playback_state.freezed.dart';
 
@@ -18,6 +20,8 @@ class PlaybackState with _$PlaybackState {
     @Default(0.0) double bufferedPosition,
     @Default(ProcessingState.idle) ProcessingState processingState,
   }) = _PlaybackState;
+
+  const PlaybackState._();
 
   bool get hasTrack => currentTrack != null;
   

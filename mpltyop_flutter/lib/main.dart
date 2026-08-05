@@ -10,7 +10,7 @@ import 'core/di.dart';
 import 'core/theme/dark_theme.dart';
 import 'core/theme/light_theme.dart';
 import 'presentation/screens/home/home_screen.dart';
-import 'presentation/screens/search/search_screen.dart'
+import 'presentation/screens/search/search_screen.dart';
 import 'presentation/screens/library/library_screen.dart';
 import 'presentation/screens/playlist_detail/playlist_detail_screen.dart';
 import 'presentation/screens/now_playing/now_playing_screen.dart';

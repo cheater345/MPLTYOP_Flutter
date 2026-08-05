@@ -7,6 +7,7 @@ import 'package:just_audio_background/just_audio_background.dart';
 import '../data/repositories/storage_repository.dart';
 import '../data/repositories/music_repository.dart';
 import '../domain/entities/track.dart';
+import '../domain/entities/repeat_mode.dart';
 import '../domain/entities/playback_state.dart';
 
 class PlaybackService extends BackgroundAudioTask {

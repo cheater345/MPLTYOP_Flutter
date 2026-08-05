@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:slate/slate.dart';
 
 import '../../core/constants.dart';
 import '../../presentation/providers/queue_controller.dart';
@@ -59,7 +58,7 @@ class NowPlayingScreen extends ConsumerWidget {
             actions: [
               IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
             ],
-          ),
+          )),
           SliverPadding(
             padding: const EdgeInsets.all(24),
             sliver: SliverList(

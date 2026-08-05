@@ -24,12 +24,6 @@ class TrackTile extends StatelessWidget {
     }
 
     return ListTile(
-      leading: SizedBox(
-        width: 40,
-        child: Center(
-          child: Text('$index', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-        ),
-      ),
       title: Text(
         track!.title,
         maxLines: 1,
@@ -55,6 +49,7 @@ class TrackTile extends StatelessWidget {
             child: const Icon(Icons.music_note, size: 24, color: Colors.grey),
           ),
         ),
+      ),
       trailing: trailing ??
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: Colors.grey),

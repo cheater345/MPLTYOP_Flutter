@@ -38,6 +38,7 @@ dependencies:
   connectivity_plus: ^6.0.3
   permission_handler: ^11.3.0
   uuid: ^4.4.0
+  dartz: ^0.10.1
 
   # UI
   google_fonts: ^6.2.1

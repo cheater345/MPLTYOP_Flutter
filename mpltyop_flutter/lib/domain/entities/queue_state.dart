@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'track.dart';
+import 'repeat_mode.dart';
 
 part 'queue_state.freezed.dart';
 
@@ -12,6 +13,8 @@ class QueueState with _$QueueState {
     @Default(false) bool shuffle,
     @Default(0.8) double volume,
   }) = _QueueState;
+
+  const QueueState._();
 
   Track? get currentTrack => 
     currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null;

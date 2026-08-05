@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hive/hive.dart';
+import 'package:collection/collection.dart';
 
 part 'track.freezed.dart';
 part 'track.g.dart';

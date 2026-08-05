@@ -29,7 +29,7 @@ class LibraryScreen extends ConsumerWidget {
           actions: [
             IconButton(
               icon: const Icon(Icons.add),
-              onPressed: _showCreatePlaylistDialog,
+              onPressed: () => _showCreatePlaylistDialog(context),
             ),
           ],
         ),
@@ -40,7 +40,8 @@ class LibraryScreen extends ConsumerWidget {
             _HistoryTab(),
           ],
         ),
-      );
+      ),
+    );
   }
 
   void _showCreatePlaylistDialog(BuildContext context) {
@@ -95,7 +96,8 @@ class _PlaylistsTab extends ConsumerWidget {
               label: const Text('Create playlist'),
             ),
           ],
-        );
+        ),
+      );
     }
     
     return GridView.builder(
@@ -132,7 +134,7 @@ class _LikedSongsTab extends ConsumerWidget {
             const SizedBox(height: 8),
             const Text('Tap the heart on any track to save it', style: TextStyle(color: Colors.grey)),
           ],
-        );
+        ),
       );
     }
     
