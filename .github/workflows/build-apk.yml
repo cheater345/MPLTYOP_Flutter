@@ -25,6 +25,11 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Setup Python 3.11 (for Chaquopy)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Setup Android SDK
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
