@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/usecases/manage_queue.dart';
 import '../../domain/entities/queue_state.dart';
 import '../../domain/entities/track.dart';
+import '../../domain/entities/repeat_mode.dart';
 
 class QueueController extends StateNotifier<QueueState> {
   final ManageQueue _manageQueue;

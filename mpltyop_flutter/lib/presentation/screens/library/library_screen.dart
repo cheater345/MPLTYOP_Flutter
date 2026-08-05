@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
-import '../../providers/library_controller.dart';
+import '../../../core/di.dart';
+import '../../../core/di.dart';
 import '../../../domain/entities/playlist.dart';
 import '../../widgets/playlist_card.dart';
 import '../../widgets/track_tile.dart';
@@ -56,12 +57,12 @@ class LibraryScreen extends ConsumerWidget {
           decoration: const InputDecoration(hintText: 'Playlist name'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           FilledButton(
             onPressed: () {
               if (controller.text.trim().isNotEmpty) {
                 // TODO: create playlist
-                Navigator.pop();
+                Navigator.pop(context);
               }
             },
             child: const Text('Create'),

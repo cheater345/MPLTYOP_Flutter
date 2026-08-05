@@ -21,7 +21,7 @@ extension FailureExt on Failure {
     ExtractionFailure(:final detail) => 'Could not extract audio: $detail',
     PlaybackFailure(:final detail) => 'Playback error: $detail',
     StorageFailure(:final detail) => 'Storage error: $detail',
-    PermissionDenied(:final permission) => 'Permission denied: $permission',
+    PermissionFailure(:final permission) => 'Permission denied: $permission',
     UnknownFailure(:final message) => 'Error: $message',
   };
 }

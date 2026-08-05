@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../core/constants.dart';
-import '../../providers/search_controller.dart';
+import '../../../core/di.dart';
+import '../../../core/di.dart';
+import '../../../core/di.dart';
 import '../../../domain/entities/track.dart';
 import '../../widgets/track_card.dart';
 import '../../widgets/track_tile.dart';
@@ -39,7 +42,6 @@ class HomeScreen extends HookConsumerWidget {
                   onTap: () => controller.openView(),
                 ),
                 suggestionsBuilder: (context, controller) => [],
-                viewOnTap: () => Navigator.pushNamed(context, '/search'),
               ),
             ),
           ),

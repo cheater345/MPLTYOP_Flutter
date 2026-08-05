@@ -15,9 +15,7 @@ import 'presentation/screens/library/library_screen.dart';
 import 'presentation/screens/playlist_detail/playlist_detail_screen.dart';
 import 'presentation/screens/now_playing/now_playing_screen.dart';
 import 'presentation/screens/settings/settings_screen.dart';
-import 'presentation/providers/settings_controller.dart';
-import 'presentation/providers/queue_controller.dart';
-import 'presentation/providers/library_controller.dart';
+import 'services/playback_service.dart';
 import 'presentation/widgets/player_bar.dart';
 
 Future<void> main() async {

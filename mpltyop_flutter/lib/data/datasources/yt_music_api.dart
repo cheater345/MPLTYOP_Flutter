@@ -1,5 +1,6 @@
 import 'package:yt_flutter_musicapi/yt_flutter_musicapi.dart';
-import '../../core/constants.dart';
+
+import '../../core/constants.dart' as app hide AudioQuality, ThumbnailQuality;
 import '../../domain/entities/track.dart';
 
 class YtMusicApi {
@@ -9,7 +10,7 @@ class YtMusicApi {
   Future<void> initialize() async {
     if (_initialized) return;
     await _plugin.initialize(
-      country: AppConstants.defaultCountry,
+      country: app.AppConstants.defaultCountry,
       proxy: null,
     );
     _initialized = true;
@@ -17,40 +18,40 @@ class YtMusicApi {
 
   Stream<Track> streamSearch({
     required String query,
-    int limit = AppConstants.defaultSearchLimit,
-    AudioQuality quality = AppConstants.defaultAudioQuality,
-    ThumbnailQuality thumbQuality = AppConstants.defaultThumbQuality,
+    int limit = app.AppConstants.defaultSearchLimit,
+    AudioQuality quality = AudioQuality.veryHigh,
+    ThumbnailQuality thumbQuality = ThumbnailQuality.veryHigh,
   }) async* {
     await initialize();
     await for (final result in YtFlutterMusicapi().streamSearchResults(
       query: query,
       limit: limit,
-      audioQuality: quality.name,
-      thumbQuality: thumbQuality.name,
+      audioQuality: quality,
+      thumbQuality: thumbQuality,
       includeAudioUrl: true,
       includeAlbumArt: true,
     )) {
-      yield Track.fromYtResult(result as Map<String, dynamic>);
+      yield Track.fromYtResult(result.toMap());
     }
   }
 
   Future<List<Track>> search({
     required String query,
-    int limit = AppConstants.defaultSearchLimit,
-    AudioQuality quality = AppConstants.defaultAudioQuality,
-    ThumbnailQuality thumbQuality = AppConstants.defaultThumbQuality,
+    int limit = app.AppConstants.defaultSearchLimit,
+    AudioQuality quality = AudioQuality.veryHigh,
+    ThumbnailQuality thumbQuality = ThumbnailQuality.veryHigh,
   }) async {
     await initialize();
     final result = await YtFlutterMusicapi().searchMusic(
       query: query,
       limit: limit,
-      audioQuality: quality.name,
-      thumbQuality: thumbQuality.name,
+      audioQuality: quality,
+      thumbQuality: thumbQuality,
       includeAudioUrl: true,
       includeAlbumArt: true,
     );
-    final tracks = (result['tracks'] as List? ?? [])
-        .map((t) => Track.fromYtResult(t as Map<String, dynamic>))
+    final tracks = (result.data ?? [])
+        .map((s) => Track.fromSearchResult(s.toMap()))
         .toList();
     return tracks;
   }

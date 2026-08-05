@@ -1,3 +1,4 @@
+import 'package:dartz/dartz.dart';
 import '../../data/repositories/storage_repository.dart';
 import '../entities/track.dart';
 import '../entities/queue_state.dart';
@@ -15,7 +16,7 @@ class ManageQueue {
     final prefs = await _playbackService._prefs; // TODO: fix
     final currentIndex = 0; // TODO: load from prefs
     
-    if (trackIdsResult.isLeft()) return Left(trackIdsResult.errorOrNull!);
+    if (trackIdsResult.isLeft()) return Left(trackIdsResult.swap().getOrElse(() => Failure.unknown('Failed to load queue')));
     
     // TODO: load tracks from cache
     return Right(QueueState(queue: [], currentIndex: 0));
@@ -26,15 +27,14 @@ class ManageQueue {
   }
 
   Future<Either<Failure, void>> addTrack(Track track, {bool playNext = false}) {
-    // TODO: implement
-    return Right(null);
+    return Future.value(Left<Failure, void>(Failure.extractionFailed('Not implemented')));
   }
 
   Future<Either<Failure, void>> removeTrack(int index) {
-    return Right(null);
+    return Future.value(Left<Failure, void>(Failure.extractionFailed('Not implemented')));
   }
 
   Future<Either<Failure, void>> clearQueue() {
-    return Right(null);
+    return Future.value(Left<Failure, void>(Failure.extractionFailed('Not implemented')));
   }
 }

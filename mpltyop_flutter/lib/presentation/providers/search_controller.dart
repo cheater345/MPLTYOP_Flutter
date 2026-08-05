@@ -6,7 +6,7 @@ import '../../domain/entities/track.dart';
 
 class SearchController extends StateNotifier<AsyncValue<List<Track>>> {
   final SearchTracks _searchTracks;
-  final CancelableOperation? _debounce;
+  CancelableOperation? _debounce;
 
   SearchController(this._searchTracks) : super(const AsyncValue.data([]));
 

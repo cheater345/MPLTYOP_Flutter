@@ -1,4 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:flutter/material.dart';
+
 import '../../core/constants.dart';
 
 part 'settings_state.freezed.dart';

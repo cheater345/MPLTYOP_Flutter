@@ -2,13 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
-import '../../providers/library_controller.dart';
+import '../../../core/di.dart';
 import '../../../domain/entities/playlist.dart';
 import '../../widgets/track_tile.dart';
 
 class PlaylistDetailScreen extends ConsumerWidget {
+  final Playlist? playlist;
+  const PlaylistDetailScreen({super.key, this.playlist});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playlist = this.playlist;
+    if (playlist == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Playlist')),
+        body: const Center(child: Text('Playlist not found')),
+      );
+    }
+    return _PlaylistDetailView(playlist: playlist);
+  }
+}
+
+class _PlaylistDetailView extends ConsumerWidget {
   final Playlist playlist;
-  const PlaylistDetailScreen({super.key, required this.playlist});
+  const _PlaylistDetailView({required this.playlist});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

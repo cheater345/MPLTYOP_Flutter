@@ -1,3 +1,4 @@
+import 'package:dartz/dartz.dart';
 import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants.dart';

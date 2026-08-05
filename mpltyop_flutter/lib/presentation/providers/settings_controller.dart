@@ -1,10 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 
-import '../../domain/usecases/manage_queue.dart';
-import '../../domain/usecases/manage_library.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../core/constants.dart';
+import '../../core/errors.dart';
 import '../../domain/entities/settings_state.dart';
 
 class SettingsController extends StateNotifier<SettingsState> {

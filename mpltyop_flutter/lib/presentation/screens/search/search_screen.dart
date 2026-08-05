@@ -1,40 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 
 import '../../../core/constants.dart';
-import '../../providers/search_controller.dart';
+import '../../../core/di.dart';
 import '../../../domain/entities/track.dart';
-import '../../widgets/track_tile.dart';
+import '../../widgets/track_tile.dart' hide TrackTileSkeleton;
 import '../../widgets/loading_skeleton.dart';
 
-class SearchScreen extends HookConsumerWidget {
+class SearchScreen extends ConsumerWidget {
   const SearchScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final searchController = useTextEditingController();
-    final focusNode = useFocusNode();
-
-    useEffect(() {
-      Future.delayed(const Duration(milliseconds: 300), () => focusNode.requestFocus());
-      return null;
-    }, []);
-
     return Scaffold(
       appBar: AppBar(
         title: SearchAnchor(
-          viewBuilder: (context, controller) {
-            return SearchBar(
-              controller: searchController,
-              hintText: 'Search songs, artists...',
-              leading: const Icon(Icons.search),
-              onTap: () => controller.openView(),
-              onChanged: (_) => ref.read(searchControllerProvider.notifier).search(searchController.text),
-              onSubmitted: (value) => ref.read(searchControllerProvider.notifier).search(value),
-            );
-          },
-          suggestionsBuilder: (context, controller) => [],
+          builder: (context, controller) => SearchBar(
+            controller: controller,
+            hintText: 'Search songs, artists...',
+            leading: const Icon(Icons.search),
+            onTap: () => controller.openView(),
+            onChanged: (_) => ref.read(searchControllerProvider.notifier).search(controller.text),
+            onSubmitted: (value) => ref.read(searchControllerProvider.notifier).search(value),
+          ),
+          suggestionsBuilder: (context, controller) => const [],
         ),
       ),
       body: Consumer(

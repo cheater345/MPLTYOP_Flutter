@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
-import '../../providers/queue_controller.dart';
+import '../../../core/di.dart';
 import '../../../domain/entities/track.dart';
+import '../../../domain/entities/repeat_mode.dart';
 
 class NowPlayingScreen extends ConsumerWidget {
   const NowPlayingScreen({super.key});
@@ -50,15 +51,16 @@ class NowPlayingScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+            ),
             title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
-              onPressed: () => Navigator.pop(),
+              onPressed: () => Navigator.pop(context),
             ),
             actions: [
               IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
             ],
-          )),
+          ),
           SliverPadding(
             padding: const EdgeInsets.all(24),
             sliver: SliverList(

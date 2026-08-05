@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
-import '../../providers/settings_controller.dart';
+import '../../../core/di.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -28,7 +28,7 @@ class SettingsScreen extends ConsumerWidget {
                       value: m,
                       child: Text(_themeModeLabel(m)),
                     )).toList(),
-                    onChanged: (v) => v != null && ref.read(settingsControllerProvider.notifier).setThemeMode(v),
+                    onChanged: (v) { if (v != null) ref.read(settingsControllerProvider.notifier).setThemeMode(v); },
                   ),
                 ),
                 _sectionTitle('Playback'),
@@ -41,7 +41,7 @@ class SettingsScreen extends ConsumerWidget {
                       value: q,
                       child: Text(q.name.toUpperCase()),
                     )).toList(),
-                    onChanged: (v) => v != null && ref.read(settingsControllerProvider.notifier).setAudioQuality(v),
+                    onChanged: (v) { if (v != null) ref.read(settingsControllerProvider.notifier).setAudioQuality(v); },
                   ),
                 ),
                 ListTile(
@@ -53,7 +53,7 @@ class SettingsScreen extends ConsumerWidget {
                       value: q,
                       child: Text(q.name.toUpperCase()),
                     )).toList(),
-                    onChanged: (v) => v != null && ref.read(settingsControllerProvider.notifier).setThumbnailQuality(v),
+                    onChanged: (v) { if (v != null) ref.read(settingsControllerProvider.notifier).setThumbnailQuality(v); },
                   ),
                 ),
                 SwitchListTile(
@@ -89,7 +89,7 @@ class SettingsScreen extends ConsumerWidget {
                       value: c,
                       child: Text(c),
                     )).toList(),
-                    onChanged: (v) => v != null && ref.read(settingsControllerProvider.notifier).setCountry(v),
+                    onChanged: (v) { if (v != null) ref.read(settingsControllerProvider.notifier).setCountry(v); },
                   ),
                 ),
                 _sectionTitle('About'),

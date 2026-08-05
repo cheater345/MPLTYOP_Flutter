@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../core/constants.dart';
-import '../../presentation/providers/queue_controller.dart';
+import '../../core/di.dart';
 import '../../domain/entities/track.dart';
 
 class PlayerBar extends ConsumerWidget {

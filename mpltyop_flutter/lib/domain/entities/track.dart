@@ -26,6 +26,34 @@ class Track with _$Track {
   }) = _Track;
 
   factory Track.fromJson(Map<String, dynamic> json) => _$TrackFromJson(json);
+
+  factory Track.fromSearchResult(Map<String, dynamic> result) {
+    return Track(
+      id: result['videoId'] ?? result['id'] ?? '',
+      title: result['title'] ?? 'Unknown Title',
+      artist: result['artists']?.toString() ?? 'Unknown Artist',
+      duration: _parseDuration(result['duration']),
+      thumbnailUrl: result['albumArt'] ?? 'https://i.ytimg.com/vi/${result['videoId'] ?? result['id']}/hqdefault.jpg',
+      audioUrl: result['audioUrl'],
+      album: result['album']?['name'],
+      artistId: result['artistId'],
+      year: int.tryParse(result['year']?.toString() ?? ''),
+      isExplicit: result['isExplicit'] ?? false,
+    );
+  }
+  
+  static int _parseDuration(dynamic value) {
+    final s = value?.toString() ?? '';
+    final parts = s.split(':').map(int.tryParse).toList();
+    if (parts.isEmpty || parts.any((p) => p == null)) return 0;
+    if (parts.length == 3) {
+      return parts[0]! * 3600 + parts[1]! * 60 + parts[2]!;
+    }
+    if (parts.length == 2) {
+      return parts[0]! * 60 + parts[1]!;
+    }
+    return s.isEmpty ? 0 : (int.tryParse(s) ?? 0);
+  }
   
   factory Track.fromYtResult(Map<String, dynamic> result) {
     return Track(

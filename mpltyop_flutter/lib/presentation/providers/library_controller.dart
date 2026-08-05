@@ -18,9 +18,9 @@ class LibraryController extends StateNotifier<LibraryState> {
 
       if (playlistsResult.isRight() && likedResult.isRight() && historyResult.isRight()) {
         state = state.copyWith(
-          playlists: playlistsResult.valueOrNull ?? [],
-          likedTrackIds: likedResult.valueOrNull ?? [],
-          historyTrackIds: historyResult.valueOrNull ?? [],
+          playlists: playlistsResult.getOrElse(() => []),
+          likedTrackIds: likedResult.getOrElse(() => []),
+          historyTrackIds: historyResult.getOrElse(() => []),
           isLoading: false,
         );
       }

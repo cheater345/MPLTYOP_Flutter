@@ -12,6 +12,15 @@ import '../domain/usecases/get_lyrics.dart';
 import '../domain/usecases/manage_queue.dart';
 import '../domain/usecases/manage_library.dart';
 import '../services/playback_service.dart';
+import '../presentation/providers/settings_controller.dart';
+import '../presentation/providers/search_controller.dart';
+import '../presentation/providers/queue_controller.dart';
+import '../presentation/providers/library_controller.dart';
+import '../domain/entities/settings_state.dart';
+import '../domain/entities/queue_state.dart';
+import '../domain/entities/library_state.dart';
+import '../domain/entities/playback_state.dart';
+import '../domain/entities/track.dart';
 import 'constants.dart';
 
 final hiveProvider = Provider<HiveInterface>((ref) => Hive);
@@ -65,8 +74,8 @@ final manageLibraryProvider = Provider<ManageLibrary>((ref) {
 
 final playbackServiceProvider = Provider<PlaybackService>((ref) {
   return PlaybackService(
-    ref.watch(musicRepositoryProvider),
-    ref.watch(storageRepositoryProvider),
+    musicRepository: ref.watch(musicRepositoryProvider),
+    storageRepository: ref.watch(storageRepositoryProvider),
   );
 });
 
@@ -75,18 +84,18 @@ final settingsControllerProvider = StateNotifierProvider<SettingsController, Set
 });
 
 final searchControllerProvider = StateNotifierProvider<SearchController, AsyncValue<List<Track>>>((ref) {
-  return SearchController(ref.watch(musicRepositoryProvider));
+  return SearchController(ref.watch(searchTracksProvider));
 });
 
 final queueControllerProvider = StateNotifierProvider<QueueController, QueueState>((ref) {
   return QueueController(
-    ref.watch(storageRepositoryProvider),
+    ref.watch(manageQueueProvider),
     ref.watch(playbackServiceProvider),
   );
 });
 
 final libraryControllerProvider = StateNotifierProvider<LibraryController, LibraryState>((ref) {
-  return LibraryController(ref.watch(storageRepositoryProvider));
+  return LibraryController(ref.watch(manageLibraryProvider));
 });
 
 final playbackStateProvider = StreamProvider<PlaybackState>((ref) {
