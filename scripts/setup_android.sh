@@ -17,14 +17,12 @@ with open('android/build.gradle', 'r') as f:
 # Add Chaquopy repository to allprojects
 content = content.replace(
     'mavenCentral()',
-    'mavenCentral()\n        maven { url "https://chaquo.com/maven" }'
+    'mavenCentral()\n        maven { url "https://chaquo.com/maven" }',
+    1  # Only in buildscript repos, not allprojects
 )
 
 # Add buildscript block with Chaquopy classpath at the top
 buildscript_block = '''buildscript {
-    ext {
-        chaquopyVersion = "12.0.0"
-    }
     repositories {
         google()
         mavenCentral()
@@ -36,38 +34,73 @@ buildscript_block = '''buildscript {
 }
 
 '''
-# Insert at the very beginning
 content = buildscript_block + content
 
-with open('android/build.gradle', 'w') as f:
-    f.write(content)
+# Add Chaquopy repo to allprojects repositories (second occurrence)
+content = content.replace(
+    'mavenCentral()\n        maven { url "https://chaquo.com/maven" }',
+    'mavenCentral()\n        maven { url "https://chaquo.com/maven" }\n        maven { url "https://chaquo.com/maven" }',
+    1
+)
+
+# Remove duplicate (keep original approach simpler)
+# Actually let's just add Chaquopy repo to allprojects
 print("project build.gradle patched")
 PYEOF
 
+# Simpler approach for project build.gradle
+python3 << 'PYEOF'
+with open('android/build.gradle', 'r') as f:
+    content = f.read()
+
+# Add Chaquopy repo to allprojects repositories
+if 'chaquo.com' not in content:
+    content = content.replace(
+        'mavenCentral()',
+        'mavenCentral()\n        maven { url "https://chaquo.com/maven" }',
+        1
+    )
+    # Add buildscript at the very top
+    buildscript = '''buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://chaquo.com/maven" }
+    }
+    dependencies {
+        classpath "com.chaquo.python:gradle:12.0.0"
+    }
+}
+
+'''
+    content = buildscript + content
+    # Also add Chaquopy to the second mavenCentral (in allprojects)
+    content = content.replace(
+        'mavenCentral()',
+        'mavenCentral()\n        maven { url "https://chaquo.com/maven" }',
+        1
+    )
+
+with open('android/build.gradle', 'w') as f:
+    f.write(content)
+print("project build.gradle patched (clean)")
+PYEOF
+
 # ================================================================
-# 2. Patch settings.gradle: add Chaquopy to dependencyResolutionManagement
+# 2. Patch settings.gradle: add Chaquopy to repositories
 # ================================================================
 python3 << 'PYEOF'
 with open('android/settings.gradle', 'r') as f:
     content = f.read()
 
-# Add Chaquopy repo to dependencyResolutionManagement repositories if present
+# Add Chaquoo repo to the first repositories block in settings.gradle (inside pluginManagement)
 if 'chaquo.com' not in content:
-    if 'dependencyResolutionManagement' in content:
-        # Add to existing repositories block
-        content = content.replace(
-            'repositories {',
-            'repositories {\n        maven { url = uri("https://chaquo.com/maven") }',
-            1
-        )
-    elif 'pluginManagement' in content:
-        # Add to existing pluginManagement repositories
-        # Find the first repositories block inside pluginManagement
-        idx = content.find('pluginManagement')
-        if idx != -1:
-            repos_idx = content.find('repositories {', idx)
-            if repos_idx != -1:
-                content = content[:repos_idx + len('repositories {')] + '\n        maven { url = uri("https://chaquo.com/maven") }' + content[repos_idx + len('repositories {'):]
+    # Find first 'repositories {' and add Chaquopy after google()
+    content = content.replace(
+        'google()\n',
+        'google()\n        maven { url = uri("https://chaquo.com/maven") }\n',
+        1
+    )
 
 with open('android/settings.gradle', 'w') as f:
     f.write(content)
@@ -76,6 +109,8 @@ PYEOF
 
 # ================================================================
 # 3. Patch app build.gradle
+# Use apply plugin for Chaquopy (not plugins DSL)
+# Place apply plugin + python config OUTSIDE the android block
 # ================================================================
 python3 << 'PYEOF'
 with open('android/app/build.gradle', 'r') as f:
@@ -93,26 +128,27 @@ content = content.replace(
     'minSdk = 24'
 )
 
-# Add Chaquopy python config after namespace line
+# Apply Chaquopy plugin right after the plugins block, before localProperties
 content = content.replace(
-    'namespace = "com.cheater345.mpltyop"',
-    '''namespace = "com.cheater345.mpltyop"
-
-    python {
-        version = "3.11"
-        buildType = "release"
-        pip {
-            install "ytmusicapi==1.8.0"
-            install "yt-dlp==2024.1.2"
-            install "requests==2.31.0"
-        }
-    }'''
+    '}\n\ndef localProperties = new Properties()',
+    '}\n\napply plugin: "com.chaquo.python"\n\ndef localProperties = new Properties()'
 )
 
-# Apply Chaquopy plugin via apply statement (not plugins DSL)
+# Add Chaquopy python config OUTSIDE the android block (before buildTypes closing or after android block)
+# Add after the android { block closes, before flutter {
 content = content.replace(
-    'flutter {',
-    '''apply plugin: "com.chaquo.python"
+    '}\n\nflutter {',
+    '''}
+
+python {
+    version = "3.11"
+    buildType = "release"
+    pip {
+        install "ytmusicapi==1.8.0"
+        install "yt-dlp==2024.1.2"
+        install "requests==2.31.0"
+    }
+}
 
 flutter {'''
 )
