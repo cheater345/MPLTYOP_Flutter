@@ -10,7 +10,7 @@ rm -rf android
 flutter create . --platforms android
 
 # ================================================================
-# 1. Upgrade Gradle wrapper to 8.9 (AGP 8.7.3 requires Gradle 8.5+)
+# 1. Upgrade Gradle wrapper to 8.9 (needed for AGP 8.7.3)
 # ================================================================
 python3 << 'PYEOF'
 with open('android/gradle/wrapper/gradle-wrapper.properties', 'r') as f:
@@ -23,7 +23,7 @@ print("Gradle wrapper upgraded to 8.9")
 PYEOF
 
 # ================================================================
-# 2. Patch settings.gradle: update AGP version + add Chaquopy repo
+# 2. Patch settings.gradle: update AGP version
 # ================================================================
 python3 << 'PYEOF'
 with open('android/settings.gradle', 'r') as f:
@@ -34,14 +34,10 @@ content = content.replace(
     'id "com.android.application" version "7.3.0" apply false',
     'id "com.android.application" version "8.7.3" apply false'
 )
-
-# Add Chaquopy repo to pluginManagement (Maven Central has Chaquopy 17.0.0)
-if 'chaquo.com' not in content and 'chaquopy' not in content:
-    content = content.replace(
-        'google()\n        mavenCentral()\n        gradlePluginPortal()',
-        'google()\n        mavenCentral()\n        gradlePluginPortal()\n        maven { url = uri("https://chaquo.com/maven") }',
-        1
-    )
+content = content.replace(
+    'id "com.android.library" version "7.3.0" apply false',
+    'id "com.android.library" version "8.7.3" apply false'
+)
 
 with open('android/settings.gradle', 'w') as f:
     f.write(content)
@@ -49,7 +45,7 @@ print("settings.gradle patched")
 PYEOF
 
 # ================================================================
-# 3. Patch project build.gradle: add Chaquopy classpath from Maven Central
+# 3. Write project build.gradle with Chaquopy + Kotlin + AGP classpaths
 # ================================================================
 python3 << 'PYEOF'
 new_content = '''buildscript {
@@ -90,13 +86,13 @@ print("project build.gradle patched")
 PYEOF
 
 # ================================================================
-# 4. Patch app build.gradle
-# Use apply plugin for Chaquopy + python config inside android block
+# 4. Write app build.gradle using apply plugin syntax (not plugins DSL)
 # ================================================================
 python3 << 'PYEOF'
 new_app_content = '''apply plugin: "com.android.application"
 apply plugin: "kotlin-android"
 apply plugin: "com.chaquo.python"
+apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file("local.properties")
@@ -111,8 +107,6 @@ if (flutterRoot == null) {
     flutterRoot = "C:/flutter"
 }
 
-apply from: flutterRoot + "/packages/flutter_tools/gradle/flutter.gradle"
-
 def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
 if (flutterVersionCode == null) {
     flutterVersionCode = "1"
@@ -124,7 +118,8 @@ if (flutterVersionName == null) {
 }
 
 android {
-    compileSdkVersion 35
+    namespace "com.cheater345.mpltyop"
+    compileSdk 35
 
     sourceSets {
         main.java.srcDirs += "src/main/kotlin"
@@ -142,10 +137,11 @@ android {
 
     defaultConfig {
         applicationId "com.cheater345.mpltyop"
-        minSdkVersion 24
-        targetSdkVersion 35
+        minSdk 24
+        targetSdk 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        multiDexEnabled true
         ndk {
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
         }
@@ -165,13 +161,15 @@ android {
     }
 }
 
-python {
-    version "3.11"
-    buildType "release"
-    pip {
-        install "ytmusicapi==1.8.0"
-        install "yt-dlp==2024.1.2"
-        install "requests==2.31.0"
+chaquopy {
+    defaultConfig {
+        version = "3.11"
+        buildType = "release"
+        pip {
+            install "ytmusicapi==1.8.0"
+            install "yt-dlp==2024.1.2"
+            install "requests==2.31.0"
+        }
     }
 }
 
@@ -191,7 +189,7 @@ print("app build.gradle patched")
 PYEOF
 
 # ================================================================
-# 5. Generate local.properties
+# 5. Generate local.properties with flutterRoot
 # ================================================================
 cat > android/local.properties << EOF
 flutter.sdk=$FLUTTER_ROOT
@@ -201,3 +199,6 @@ EOF
 
 echo "=== app build.gradle ==="
 cat android/app/build.gradle
+echo ""
+echo "=== local.properties ==="
+cat android/local.properties
