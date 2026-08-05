@@ -150,3 +150,15 @@ cat android/build.gradle
 echo ""
 echo "=== app build.gradle ==="
 cat android/app/build.gradle
+
+# ================================================================
+# 5. Generate local.properties with flutter.sdk (needed for $flutterRoot)
+# ================================================================
+cat > android/local.properties << EOF
+flutter.sdk=$FLUTTER_ROOT
+flutter.versionCode=1
+flutter.versionName=1.0.0
+EOF
+echo "FLUTTER_ROOT=$FLUTTER_ROOT"
+echo "=== local.properties ==="
+cat android/local.properties
