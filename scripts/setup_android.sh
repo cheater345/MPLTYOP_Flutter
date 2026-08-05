@@ -13,21 +13,15 @@ flutter create . --platforms android
 python3 << 'PYEOF'
 with open('android/gradle/wrapper/gradle-wrapper.properties', 'r') as f:
     content = f.read()
-content = content.replace(
-    'gradle-7.6.3-all',
-    'gradle-8.9-all'
-)
-content = content.replace(
-    'gradle-7.6.3-bin',
-    'gradle-8.9-bin'
-)
+content = content.replace('gradle-7.6.3-all', 'gradle-8.9-all')
+content = content.replace('gradle-7.6.3-bin', 'gradle-8.9-bin')
 with open('android/gradle/wrapper/gradle-wrapper.properties', 'w') as f:
     f.write(content)
 print("Gradle wrapper upgraded to 8.9")
 PYEOF
 
 # ================================================================
-# 2. Patch settings.gradle: update AGP version + add Chaquopy
+# 2. Patch settings.gradle: update AGP version + add Chaquopy repo
 # ================================================================
 python3 << 'PYEOF'
 with open('android/settings.gradle', 'r') as f:
@@ -43,10 +37,8 @@ content = content.replace(
     'id "com.android.library" version "8.7.3" apply false'
 )
 
-# Add Chaquopy to pluginManagement (for plugins DSL) + dependencyResolutionManagement (for repos)
+# Add Chaquopy repo to pluginManagement
 if 'chaquo.com' not in content:
-    # Find pluginManagement repositories block and add Chaquopy repo
-    # The Flutter-generated settings.gradle has pluginManagement with google(), mavenCentral(), gradlePluginPortal()
     content = content.replace(
         'google()\n        mavenCentral()\n        gradlePluginPortal()',
         'google()\n        mavenCentral()\n        gradlePluginPortal()\n        maven { url = uri("https://chaquo.com/maven") }',
@@ -99,6 +91,8 @@ PYEOF
 
 # ================================================================
 # 4. Patch app build.gradle
+# Use apply plugin for Chaquopy (plugins DSL doesn't work without marker)
+# Put python {} config inside android block (Chaquopy 17.0.0 expects this)
 # ================================================================
 python3 << 'PYEOF'
 with open('android/app/build.gradle', 'r') as f:
@@ -111,39 +105,21 @@ content = content.replace('com.example.mpltyop_flutter', 'com.cheater345.mpltyop
 content = content.replace('JavaVersion.VERSION_1_8', 'JavaVersion.VERSION_11')
 
 # Change minSdk to 24 for Chaquopy
-content = content.replace(
-    'minSdk = flutter.minSdkVersion',
-    'minSdk = 24'
-)
+content = content.replace('minSdk = flutter.minSdkVersion', 'minSdk = 24')
 
 # Update compileSdk to 35
+content = content.replace('compileSdk = flutter.compileSdkVersion', 'compileSdk = 35')
+
+# Apply Chaquopy plugin via apply plugin (after the plugins block)
 content = content.replace(
-    'compileSdk = flutter.compileSdkVersion',
-    'compileSdk = 35'
+    '}\n\ndef localProperties = new Properties()',
+    '}\n\napply plugin: "com.chaquo.python"\n\ndef localProperties = new Properties()'
 )
 
-# Add Chaquopy to plugins block
+# Add Chaquopy python config INSIDE the android block (after namespace)
 content = content.replace(
-    'id "kotlin-android"',
-    'id "kotlin-android"\n    id "com.chaquo.python"'
-)
-
-# Add Chaquopy python config OUTSIDE the android block
-content = content.replace(
-    '}\n\nflutter {',
-    '''}
-
-python {
-    version = "3.11"
-    buildType = "release"
-    pip {
-        install "ytmusicapi==1.8.0"
-        install "yt-dlp==2024.1.2"
-        install "requests==2.31.0"
-    }
-}
-
-flutter {'''
+    'namespace = "com.cheater345.mpltyop"\n',
+    'namespace = "com.cheater345.mpltyop"\n\n    python {\n        version = "3.11"\n        buildType = "release"\n        pip {\n            install "ytmusicapi==1.8.0"\n            install "yt-dlp==2024.1.2"\n            install "requests==2.31.0"\n        }\n    }\n'
 )
 
 with open('android/app/build.gradle', 'w') as f:
