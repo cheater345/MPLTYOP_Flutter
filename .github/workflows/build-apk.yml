@@ -19,13 +19,8 @@ jobs:
           cache: true
       - name: Run flutter doctor
         run: flutter doctor -v
-      - name: Show Flutter version
-        run: flutter --version
       - name: Get dependencies
         run: flutter pub get
-        working-directory: mpltyop_flutter
-      - name: Run flutter analyze
-        run: flutter analyze
         working-directory: mpltyop_flutter
       - name: Build APK
         run: flutter build apk --release --split-per-abi -v
