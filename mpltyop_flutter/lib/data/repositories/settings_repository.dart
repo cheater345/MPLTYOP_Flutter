@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants.dart';
 import '../../core/errors.dart';
-import '../entities/settings_state.dart';
+import '../../domain/entities/settings_state.dart';
 
 abstract class SettingsRepository {
   Future<Either<Failure, SettingsState>> loadSettings();

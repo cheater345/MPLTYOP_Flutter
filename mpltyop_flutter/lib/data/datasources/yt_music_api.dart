@@ -1,6 +1,6 @@
 import 'package:yt_flutter_musicapi/yt_flutter_musicapi.dart';
 import '../../core/constants.dart';
-import '../entities/track.dart';
+import '../../domain/entities/track.dart';
 
 class YtMusicApi {
   final YtFlutterMusicapi _plugin = YtFlutterMusicapi();

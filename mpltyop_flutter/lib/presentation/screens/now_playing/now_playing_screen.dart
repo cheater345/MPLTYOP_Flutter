@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants.dart';
-import '../../presentation/providers/queue_controller.dart';
-import '../../domain/entities/track.dart';
+import '../../../core/constants.dart';
+import '../../providers/queue_controller.dart';
+import '../../../domain/entities/track.dart';
 
 class NowPlayingScreen extends ConsumerWidget {
   const NowPlayingScreen({super.key});

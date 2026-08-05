@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../core/errors.dart';
 import '../../core/constants.dart';
 import '../datasources/yt_music_api.dart';
-import '../entities/track.dart';
+import '../../domain/entities/track.dart';
 import 'storage_repository.dart';
 
 abstract class MusicRepository {

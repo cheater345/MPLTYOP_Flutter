@@ -2,8 +2,8 @@ import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants.dart';
 import '../../core/errors.dart';
-import '../entities/track.dart';
-import '../entities/playlist.dart';
+import '../../domain/entities/track.dart';
+import '../../domain/entities/playlist.dart';
 
 abstract class StorageRepository {
   // Tracks

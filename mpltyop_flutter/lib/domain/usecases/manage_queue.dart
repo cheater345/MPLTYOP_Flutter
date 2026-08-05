@@ -1,4 +1,4 @@
-import '../repositories/storage_repository.dart';
+import '../../data/repositories/storage_repository.dart';
 import '../entities/track.dart';
 import '../entities/queue_state.dart';
 import '../entities/playlist.dart';

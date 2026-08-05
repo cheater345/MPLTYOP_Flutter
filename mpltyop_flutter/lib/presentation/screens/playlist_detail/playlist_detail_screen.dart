@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants.dart';
-import '../../presentation/providers/library_controller.dart';
-import '../../domain/entities/playlist.dart';
-import '../widgets/track_tile.dart';
+import '../../../core/constants.dart';
+import '../../providers/library_controller.dart';
+import '../../../domain/entities/playlist.dart';
+import '../../widgets/track_tile.dart';
 
 class PlaylistDetailScreen extends ConsumerWidget {
   final Playlist playlist;

@@ -5,7 +5,7 @@ import '../../domain/usecases/manage_queue.dart';
 import '../../domain/usecases/manage_library.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../core/constants.dart';
-import '../entities/settings_state.dart';
+import '../../domain/entities/settings_state.dart';
 
 class SettingsController extends StateNotifier<SettingsState> {
   final SettingsRepository _repository;

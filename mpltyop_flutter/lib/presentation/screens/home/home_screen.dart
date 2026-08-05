@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
-import '../../core/constants.dart';
-import '../../presentation/providers/search_controller.dart';
-import '../../domain/entities/track.dart';
-import '../widgets/track_card.dart';
-import '../widgets/track_tile.dart';
-import '../widgets/loading_skeleton.dart';
+import '../../../core/constants.dart';
+import '../../providers/search_controller.dart';
+import '../../../domain/entities/track.dart';
+import '../../widgets/track_card.dart';
+import '../../widgets/track_tile.dart';
+import '../../widgets/loading_skeleton.dart';
 
 class HomeScreen extends HookConsumerWidget {
   const HomeScreen({super.key});

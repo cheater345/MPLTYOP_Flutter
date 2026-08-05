@@ -1,4 +1,4 @@
-import '../repositories/music_repository.dart';
+import '../../data/repositories/music_repository.dart';
 import '../entities/track.dart';
 import '../../core/errors.dart';
 
