@@ -34,6 +34,9 @@ jobs:
           sudo apt-get install -y openjdk-17-jdk python3 python3-pip
 
       - name: Get dependencies
+      - name: Show pubspec
+        run: cat pubspec.yaml
+        working-directory: mpltyop_flutter
         run: flutter pub get
         working-directory: mpltyop_flutter
 
@@ -43,6 +46,9 @@ jobs:
 
       - name: Analyze
         run: flutter analyze
+      - name: Show Flutter doctor
+        run: flutter doctor -v
+        working-directory: mpltyop_flutter
         working-directory: mpltyop_flutter
 
       - name: Run tests
@@ -83,4 +89,7 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed .
         working-directory: mpltyop_flutter
       - run: flutter analyze
+      - name: Show Flutter doctor
+        run: flutter doctor -v
+        working-directory: mpltyop_flutter
         working-directory: mpltyop_flutter
