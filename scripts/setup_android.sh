@@ -8,25 +8,22 @@ rm -rf android
 flutter create . --platforms android
 
 # ================================================================
-# 1. Upgrade Gradle wrapper to 8.7 (compatible with AGP 8.7.3)
+# 1. Upgrade Gradle wrapper to 8.9 (AGP 8.7.3 requires Gradle 8.9)
 # ================================================================
-# Use Gradle wrapper directly
-chmod +x android/gradlew
-# Update gradle-wrapper.properties to use Gradle 8.7
 python3 << 'PYEOF'
 with open('android/gradle/wrapper/gradle-wrapper.properties', 'r') as f:
     content = f.read()
 content = content.replace(
     'gradle-7.6.3-all',
-    'gradle-8.7-all'
+    'gradle-8.9-all'
 )
 content = content.replace(
     'gradle-7.6.3-bin',
-    'gradle-8.7-bin'
+    'gradle-8.9-bin'
 )
 with open('android/gradle/wrapper/gradle-wrapper.properties', 'w') as f:
     f.write(content)
-print("Gradle wrapper upgraded to 8.7")
+print("Gradle wrapper upgraded to 8.9")
 PYEOF
 
 # ================================================================
