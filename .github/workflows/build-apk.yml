@@ -1,4 +1,4 @@
-name: Minimal Test
+name: Debug Pub Get
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -18,12 +18,8 @@ jobs:
           cache: true
       - name: Run flutter doctor
         run: flutter doctor -v
-      - name: Test flutter create
-        run: flutter create test_app --platforms android
-      - name: Build test app
-        run: cd test_app && flutter build apk --release
-      - name: Check mpltyop_flutter exists
-        run: ls -la mpltyop_flutter/
-      - name: Try flutter pub get on mpltyop_flutter
+      - name: Try flutter pub get in root
+        run: flutter pub get
+      - name: Try flutter pub get in mpltyop_flutter
         run: flutter pub get
         working-directory: mpltyop_flutter
