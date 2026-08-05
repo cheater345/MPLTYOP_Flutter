@@ -38,10 +38,15 @@ jobs:
         run: flutter pub get
         working-directory: mpltyop_flutter
 
-      - name: Patch yt_flutter_musicapi plugin (remove Windows Python path + align versions)
+      - name: Patch yt_flutter_musicapi plugin
         run: |
-          PLUGIN_DIR=$(find /home/runner/.pub-cache/git/ -maxdepth 1 -name "yt_flutter_musicapi-*" -type D | head -1)
+          PLUGIN_DIR=$(find /home/runner/.pub-cache/git/ -maxdepth 1 -name "yt_flutter_musicapi-*" 2>/dev/null | head -1)
           echo "Plugin dir: $PLUGIN_DIR"
+          if [ -z "$PLUGIN_DIR" ]; then
+            echo "Plugin not found, searching..."
+            ls /home/runner/.pub-cache/git/
+            exit 1
+          fi
           # Remove hardcoded Windows Python path
           sed -i '/buildPython/d' "$PLUGIN_DIR/android/build.gradle"
           # Downgrade Chaquopy to 12.0.0 (latest available on chaquo.com Maven)
@@ -52,7 +57,6 @@ jobs:
           sed -i 's/ext.kotlin_version = "2.1.0"/ext.kotlin_version = "1.9.20"/' "$PLUGIN_DIR/android/build.gradle"
           # Use compileSdk 34 (compatible with AGP 7.3.0)
           sed -i 's/compileSdk = 35/compileSdk = 34/' "$PLUGIN_DIR/android/build.gradle"
-          # Ensure minSdk 24 is fine
           echo "=== Patched plugin build.gradle ==="
           cat "$PLUGIN_DIR/android/build.gradle"
 
