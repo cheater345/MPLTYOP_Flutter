@@ -53,7 +53,6 @@ jobs:
       - name: Generate code (freezed, json_serializable, hive)
         run: dart run build_runner build --delete-conflicting-outputs --verbose
         working-directory: mpltyop_flutter
-        continue-on-error: true
 
       - name: Analyze
         run: flutter analyze
@@ -68,7 +67,6 @@ jobs:
         working-directory: mpltyop_flutter
         env:
           JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-        timeout-minutes: 90
 
       - name: List build outputs
         run: ls -la build/app/outputs/flutter-apk/
