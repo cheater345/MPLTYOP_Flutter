@@ -25,22 +25,50 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Remove existing Android dir to avoid conflicts
-        run: rm -rf mpltyop_flutter/android
-
       - name: Generate Android project files
-        run: flutter create . --platforms android
-        working-directory: mpltyop_flutter
-
-      - name: Add Chaquopy to project build.gradle
         run: |
           cd mpltyop_flutter
-          sed -i '/classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:/a\        classpath "com.chaquo.python:gradle:16.0.0"' android/build.gradle
-          sed -i "s|mavenCentral()|mavenCentral()\n        maven { url 'https://chaquo.com/maven' }|" android/build.gradle
-          sed -i "1s;^;apply plugin: 'com.chaquo.python'\n" android/app/build.gradle
+          # Remove android dir to get clean generated files
+          rm -rf android
+          flutter create . --platforms android
+          echo "=== Android dir structure ==="
+          find android -name "*.gradle" -o -name "gradlew" -o -name "*.kt" | sort
+
+      - name: Apply Chaquopy + custom Android config
+        run: |
+          cd mpltyop_flutter
           
-          # Add Chaquopy config to android block
-          sed -i '/namespace/a\    python {\n        version "3.11"\n        buildType "release"\n        pip {\n            install "ytmusicapi==1.8.0"\n            install "yt-dlp==2024.1.2"\n            install "requests==2.31.0"\n        }\n    }' android/app/build.gradle
+          # 1. Add Chaquopy to project build.gradle
+          sed -i 's|mavenCentral()|mavenCentral()\n        maven { url "https://chaquo.com/maven" }|' android/build.gradle
+          sed -i '/classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:/a\        classpath "com.chaquo.python:gradle:12.4.0"' android/build.gradle
+          
+          # 2. Add Chaquopy plugin to app build.gradle
+          sed -i '1s|apply plugin: '\''com.android.application'\''|apply plugin: '\''com.android.application'\''\napply plugin: '\''com.chaquo.python'\''|' android/app/build.gradle
+          
+          # 3. Add Chaquopy config and dependencies using python
+          python3 << 'PYEOF'
+import re
+
+with open('android/app/build.gradle', 'r') as f:
+    content = f.read()
+
+# Add Chaquopy python config after namespace line
+content = content.replace(
+    'namespace "com.cheater345.mpltyop"',
+    'namespace "com.cheater345.mpltyop"\n\n    python {\n        version "3.11"\n        buildType "release"\n        pip {\n            install "ytmusicapi==1.8.0"\n            install "yt-dlp==2024.1.2"\n            install "requests==2.31.0"\n        }\n    }'
+)
+
+# Add multidex dependency
+content = content.replace(
+    'implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.20"',
+    'implementation "androidx.multidex:multidex:2.0.1"\n    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.20"'
+)
+
+with open('android/app/build.gradle', 'w') as f:
+    f.write(content)
+
+print('Chaquopy + deps added')
+PYEOF
 
       - name: Get dependencies
         run: flutter pub get
