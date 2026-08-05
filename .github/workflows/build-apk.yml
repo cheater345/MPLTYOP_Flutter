@@ -6,7 +6,6 @@ on:
     paths:
       - 'mpltyop_flutter/**'
       - '.github/workflows/build-apk.yml'
-      - 'scripts/**'
   workflow_dispatch:
   release:
     types: [published]
@@ -31,8 +30,14 @@ jobs:
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk" >> $GITHUB_ENV
 
-      - name: Setup Android project with Chaquopy
-        run: bash scripts/setup_android.sh
+      - name: Patch yt_flutter_musicapi plugin
+        run: |
+          PLUGIN_DIR=$(find /home/runner/.pub-cache/git/ -maxdepth 1 -name "yt_flutter_musicapi-*" 2>/dev/null | head -1)
+          echo "Plugin dir: $PLUGIN_DIR"
+          if [ -n "$PLUGIN_DIR" ]; then
+            sed -i '/buildPython/d' "$PLUGIN_DIR/android/build.gradle"
+            echo "Plugin patched"
+          fi
 
       - name: Build APK
         run: |
