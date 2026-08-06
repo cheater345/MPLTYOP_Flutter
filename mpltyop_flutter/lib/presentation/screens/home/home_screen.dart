@@ -241,7 +241,21 @@ class _SectionTrackCard extends HookConsumerWidget {
         ? TrackCard(track: tracks.first, isSectionCard: true)
         : const SizedBox(width: 140, child: Center(child: Text('No results'))),
       loading: () => const _TrackCardSkeleton(),
-      error: (_, __) => const SizedBox(width: 140, child: Center(child: Text('Error'))),
+      error: (err, _) => SizedBox(
+        width: 140,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Text(
+              '$err',
+              style: const TextStyle(fontSize: 10, color: Colors.red),
+              textAlign: TextAlign.center,
+              maxLines: 5,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

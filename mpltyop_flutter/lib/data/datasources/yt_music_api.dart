@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:yt_flutter_musicapi/yt_flutter_musicapi.dart';
 
 import '../../core/constants.dart' as app hide AudioQuality, ThumbnailQuality;
@@ -5,15 +7,35 @@ import '../../domain/entities/track.dart';
 
 class YtMusicApi {
   final YtFlutterMusicapi _plugin = YtFlutterMusicapi();
-  bool _initialized = false;
+  Future<void>? _initFuture;
 
-  Future<void> initialize() async {
-    if (_initialized) return;
+  Future<void> initialize() {
+    return _initFuture ??= _doInitialize();
+  }
+
+  Future<void> _doInitialize() async {
     await _plugin.initialize(
       country: app.AppConstants.defaultCountry,
       proxy: null,
     );
-    _initialized = true;
+
+    // The plugin returns immediately and finishes booting Python in the
+    // background. Wait (with retries) until ytmusicapi and yt-dlp are ready,
+    // otherwise the first searches fail before init completes.
+    const maxAttempts = 12;
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      final status = await _plugin.checkStatus();
+      if (status.success && status.data?.isFullyOperational == true) {
+        return;
+      }
+      await Future<void>.delayed(const Duration(seconds: 3));
+    }
+
+    final last = await _plugin.checkStatus();
+    throw Exception(
+      'Python not ready: ${last.message} '
+      '(${last.data?.statusSummary ?? 'unknown'})',
+    );
   }
 
   Stream<Track> streamSearch({
@@ -50,6 +72,9 @@ class YtMusicApi {
       includeAudioUrl: true,
       includeAlbumArt: true,
     );
+    if (!result.success) {
+      throw Exception(result.error ?? 'Search failed');
+    }
     final tracks = (result.data ?? [])
         .map((s) => Track.fromSearchResult(s.toMap()))
         .toList();
