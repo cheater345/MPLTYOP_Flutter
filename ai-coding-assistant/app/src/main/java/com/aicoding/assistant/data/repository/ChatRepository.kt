@@ -81,6 +81,7 @@ class ChatRepository(
     fun sendMessage(
         chatId: Long,
         text: String,
+        providerId: Long? = null,
         modelOverride: String? = null,
         onError: (String) -> Unit = {},
         onFinished: (Long, String) -> Unit = { _, _ -> },
@@ -99,7 +100,11 @@ class ChatRepository(
                 MessageEntity(chatId = chatId, role = MessageRole.ASSISTANT.name, content = "", createdAt = System.currentTimeMillis() + 1)
             )
 
-            val provider = providerRepository.getAllEnabled().firstOrNull()
+            val provider = if (providerId != null) {
+                providerRepository.getById(providerId)
+            } else {
+                null
+            } ?: providerRepository.getAllEnabled().firstOrNull()
             if (provider == null) {
                 messageDao.delete(assistantId)
                 onError("No enabled provider configured. Open Settings to add one.")

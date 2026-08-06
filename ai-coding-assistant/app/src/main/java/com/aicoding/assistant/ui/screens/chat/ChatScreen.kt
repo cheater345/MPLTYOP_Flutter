@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,8 +28,11 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,6 +61,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.aicoding.assistant.domain.model.MessageRole
+import com.aicoding.assistant.domain.model.ModelInfo
+import com.aicoding.assistant.domain.model.Provider
 import com.aicoding.assistant.ui.components.MarkdownText
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,6 +77,11 @@ fun ChatScreen(
     val error by viewModel.error.collectAsState()
     val composerText by viewModel.composerText.collectAsState()
     val sendState by viewModel.sendState.collectAsState()
+    val providers by viewModel.providers.collectAsState()
+    val selectedProviderId by viewModel.selectedProviderId.collectAsState()
+    val models by viewModel.models.collectAsState()
+    val selectedModel by viewModel.selectedModel.collectAsState()
+    val modelsLoading by viewModel.modelsLoading.collectAsState()
     val listState = rememberLazyListState()
     val context = LocalContext.current
     val streaming = sendState is ChatViewModel.SendState.Streaming
@@ -88,7 +99,7 @@ fun ChatScreen(
                         style = MaterialTheme.typography.titleMedium,
                     )
                 },
-navigationIcon = {
+                navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
@@ -100,13 +111,24 @@ navigationIcon = {
             )
         },
         bottomBar = {
-            ChatInputBar(
-                text = composerText,
-                onTextChange = { viewModel.onComposerChange(it) },
-                onSend = { viewModel.send(it) },
-                streaming = streaming,
-                onStop = { viewModel.stop() },
-            )
+            Column {
+                ModelSelectorBar(
+                    providers = providers.filter { it.enabled },
+                    selectedProviderId = selectedProviderId,
+                    onSelectProvider = { viewModel.selectProvider(it) },
+                    models = models,
+                    selectedModel = selectedModel,
+                    modelsLoading = modelsLoading,
+                    onSelectModel = { viewModel.selectModel(it) },
+                )
+                ChatInputBar(
+                    text = composerText,
+                    onTextChange = { viewModel.onComposerChange(it) },
+                    onSend = { viewModel.send(it) },
+                    streaming = streaming,
+                    onStop = { viewModel.stop() },
+                )
+            }
         },
     ) { padding ->
         Box(
@@ -158,6 +180,95 @@ navigationIcon = {
                 TextButton(onClick = { viewModel.clearError() }) { Text("OK") }
             },
         )
+    }
+}
+
+@Composable
+private fun ModelSelectorBar(
+    providers: List<Provider>,
+    selectedProviderId: Long?,
+    onSelectProvider: (Provider) -> Unit,
+    models: List<ModelInfo>,
+    selectedModel: String?,
+    modelsLoading: Boolean,
+    onSelectModel: (String) -> Unit,
+) {
+    var providerMenu by remember { mutableStateOf(false) }
+    var modelMenu by remember { mutableStateOf(false) }
+    val selectedProvider = providers.firstOrNull { it.id == selectedProviderId }
+    val selectedModelInfo = models.firstOrNull { it.id == selectedModel }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box {
+            Text(
+                text = selectedProvider?.name ?: "Provider",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .clickable { providerMenu = true }
+                    .padding(vertical = 4.dp),
+            )
+            DropdownMenu(
+                expanded = providerMenu,
+                onDismissRequest = { providerMenu = false },
+            ) {
+                providers.forEach { provider ->
+                    DropdownMenuItem(
+                        text = { Text(provider.name, maxLines = 1) },
+                        onClick = {
+                            providerMenu = false
+                            onSelectProvider(provider)
+                        },
+                    )
+                }
+                if (providers.isEmpty()) {
+                    DropdownMenuItem(text = { Text("No enabled providers") }, onClick = { providerMenu = false })
+                }
+            }
+        }
+        Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(8.dp))
+        if (modelsLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
+        } else {
+            Box {
+                Text(
+                    text = selectedModelInfo?.name ?: selectedModel ?: "Model",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .clickable { modelMenu = true }
+                        .padding(vertical = 4.dp),
+                )
+                DropdownMenu(
+                    expanded = modelMenu,
+                    onDismissRequest = { modelMenu = false },
+                ) {
+                    models.forEach { model ->
+                        DropdownMenuItem(
+                            text = { Text(model.name, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
+                            onClick = {
+                                modelMenu = false
+                                onSelectModel(model.id)
+                            },
+                        )
+                    }
+                    if (models.isEmpty()) {
+                        DropdownMenuItem(text = { Text("No models (enter key in provider settings)") }, onClick = { modelMenu = false })
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.weight(1f))
     }
 }
 

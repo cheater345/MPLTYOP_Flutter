@@ -3,10 +3,14 @@ package com.aicoding.assistant.ui.screens.chat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aicoding.assistant.data.remote.ModelFetcher
 import com.aicoding.assistant.data.repository.ChatRepository
 import com.aicoding.assistant.data.repository.ProviderRepository
 import com.aicoding.assistant.domain.model.Message
 import com.aicoding.assistant.domain.model.MessageRole
+import com.aicoding.assistant.domain.model.ModelInfo
+import com.aicoding.assistant.domain.model.Provider
+import com.aicoding.assistant.domain.model.ProviderKind
 import com.aicoding.assistant.domain.model.Prompt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +24,7 @@ import javax.inject.Inject
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val providerRepository: ProviderRepository,
+    private val modelFetcher: ModelFetcher,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -34,6 +39,18 @@ class ChatViewModel @Inject constructor(
     val providers = providerRepository.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    private val _selectedProviderId = MutableStateFlow<Long?>(null)
+    val selectedProviderId: StateFlow<Long?> = _selectedProviderId
+
+    private val _models = MutableStateFlow<List<ModelInfo>>(emptyList())
+    val models: StateFlow<List<ModelInfo>> = _models
+
+    private val _selectedModel = MutableStateFlow<String?>(null)
+    val selectedModel: StateFlow<String?> = _selectedModel
+
+    private val _modelsLoading = MutableStateFlow(false)
+    val modelsLoading: StateFlow<Boolean> = _modelsLoading
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
@@ -46,6 +63,55 @@ class ChatViewModel @Inject constructor(
     sealed interface SendState {
         object Idle : SendState
         data object Streaming : SendState
+    }
+
+    init {
+        viewModelScope.launch {
+            val enabled = providerRepository.getAllEnabled()
+            val preferred = enabled.firstOrNull()
+            if (preferred != null) {
+                selectProvider(preferred)
+            }
+        }
+    }
+
+    fun selectProvider(provider: Provider) {
+        _selectedProviderId.value = provider.id
+        _selectedModel.value = null
+        viewModelScope.launch {
+            _modelsLoading.value = true
+            _models.value = modelFetcher.fetch(provider)
+            _modelsLoading.value = false
+            if (_models.value.isEmpty()) {
+                _models.value = fallbackModels(provider.kind)
+            }
+            _selectedModel.value = _models.value.firstOrNull()?.id
+        }
+    }
+
+    fun selectModel(modelId: String) {
+        _selectedModel.value = modelId
+    }
+
+    private fun fallbackModels(kind: ProviderKind): List<ModelInfo> = when (kind) {
+        ProviderKind.OPENROUTER -> listOf(
+            ModelInfo("meta-llama/llama-3.1-8b-instruct:free", "Llama 3.1 8B (free)"),
+            ModelInfo("deepseek/deepseek-chat", "DeepSeek Chat"),
+            ModelInfo("openai/gpt-4o-mini", "GPT-4o Mini"),
+        )
+        ProviderKind.GEMINI -> listOf(
+            ModelInfo("gemini-1.5-flash", "Gemini 1.5 Flash"),
+            ModelInfo("gemini-1.5-pro", "Gemini 1.5 Pro"),
+        )
+        ProviderKind.OLLAMA, ProviderKind.LM_STUDIO, ProviderKind.LOCAL -> listOf(
+            ModelInfo("llama3.2", "Llama 3.2"),
+            ModelInfo("qwen2.5:7b", "Qwen 2.5 7B"),
+            ModelInfo("mistral", "Mistral"),
+        )
+        else -> listOf(
+            ModelInfo("gpt-4o-mini", "GPT-4o Mini"),
+            ModelInfo("gpt-4o", "GPT-4o"),
+        )
     }
 
     fun onQueryChange(q: String) {
@@ -64,7 +130,8 @@ class ChatViewModel @Inject constructor(
             chatRepository.sendMessage(
                 chatId = chatId,
                 text = text,
-                modelOverride = model,
+                providerId = _selectedProviderId.value,
+                modelOverride = model ?: _selectedModel.value,
                 onError = { msg ->
                     _error.value = msg
                     _sendState.value = SendState.Idle
@@ -97,7 +164,8 @@ class ChatViewModel @Inject constructor(
             chatRepository.sendMessage(
                 chatId = chatId,
                 text = lastUser.content,
-                modelOverride = modelOverride,
+                providerId = _selectedProviderId.value,
+                modelOverride = modelOverride ?: _selectedModel.value,
                 onError = { msg ->
                     _error.value = msg
                     _sendState.value = SendState.Idle
