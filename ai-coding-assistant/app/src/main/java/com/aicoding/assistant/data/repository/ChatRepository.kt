@@ -143,26 +143,46 @@ class ChatRepository(
                 .map { it.role to it.content }
                 .takeLast(10)
 
-            val request = ChatRequestData(
-                messages = history + listOf("user" to text),
-                model = model,
-                temperature = provider.temperature,
-                topP = provider.topP,
-                maxTokens = provider.maxTokens,
-                stream = provider.stream,
-                systemPrompt = provider.systemPrompt.takeIf { it.isNotBlank() },
-                images = imagePayloads,
-            )
-
-            val ok = deliver(
-                provider = provider,
-                keys = keys,
-                request = request,
-                onDelta = { delta ->
-                    val current = messageDao.getById(assistantId)?.content ?: ""
-                    messageDao.updateContent(assistantId, current + delta)
-                },
-            )
+            var runHistory: List<Pair<String, String>> =
+                history + listOf("user" to text)
+            var runImages = imagePayloads
+            var ok = false
+            var truncated = true
+            var continueRounds = 0
+            while (truncated && continueRounds < 4) {
+                val request = ChatRequestData(
+                    messages = runHistory,
+                    model = model,
+                    temperature = provider.temperature,
+                    topP = provider.topP,
+                    maxTokens = provider.maxTokens,
+                    stream = provider.stream,
+                    systemPrompt = provider.systemPrompt.takeIf { it.isNotBlank() },
+                    images = runImages,
+                )
+                val outcome = deliver(
+                    provider = provider,
+                    keys = keys,
+                    request = request,
+                    onDelta = { delta ->
+                        val current = messageDao.getById(assistantId)?.content ?: ""
+                        messageDao.updateContent(assistantId, current + delta)
+                    },
+                )
+                ok = outcome.streamed
+                truncated = outcome.truncated
+                if (!ok) break
+                if (truncated) {
+                    continueRounds++
+                    if (continueRounds >= 4) break
+                    val partial = messageDao.getById(assistantId)?.content ?: break
+                    runHistory = runHistory + listOf(
+                        "assistant" to partial,
+                        "user" to "Please continue your previous reply exactly from where it stopped. Do not repeat anything already written; just continue.",
+                    )
+                    runImages = emptyList()
+                }
+            }
             if (!ok) {
                 messageDao.delete(assistantId)
                 onError("All API keys failed or request returned no content.")
@@ -179,23 +199,25 @@ class ChatRepository(
         }
     }
 
+    private data class StreamOutcome(val streamed: Boolean, val truncated: Boolean)
+
     private suspend fun deliver(
         provider: Provider,
         keys: List<ApiKey>,
         request: ChatRequestData,
         onDelta: suspend (String) -> Unit,
-    ): Boolean {
+    ): StreamOutcome {
         val abort = AbortRef()
         if (keys.isEmpty()) {
             return tryStream(provider, null, request, abort, onDelta)
         }
-                for (key in keys) {
-            if (abort.aborted) return true
+        for (key in keys) {
+            if (abort.aborted) return StreamOutcome(true, false)
             try {
-                val ok = tryStream(provider, key, request, abort, onDelta)
-                if (ok) {
+                val outcome = tryStream(provider, key, request, abort, onDelta)
+                if (outcome.streamed) {
                     apiKeyRepository.recordUsage(key.id)
-                    return true
+                    return outcome
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -204,7 +226,7 @@ class ChatRepository(
                 if (!isRateLimit(e)) break
             }
         }
-        return false
+        return StreamOutcome(false, false)
     }
 
     private suspend fun tryStream(
@@ -213,17 +235,18 @@ class ChatRepository(
         request: ChatRequestData,
         abort: AbortRef,
         onDelta: suspend (String) -> Unit,
-    ): Boolean {
+    ): StreamOutcome {
         val engine = buildEngine(provider, key)
-        try {
-            engine.stream(request, abort).collect { delta ->
+        return try {
+            var truncated = false
+            engine.stream(request, abort, onFinish = { truncated = it }).collect { delta ->
                 if (delta.isNotEmpty() && !abort.aborted) onDelta(delta)
             }
-            return true
+            StreamOutcome(streamed = !abort.aborted, truncated = truncated)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            if (abort.aborted) return true
+            if (abort.aborted) return StreamOutcome(true, false)
             throw e
         }
     }

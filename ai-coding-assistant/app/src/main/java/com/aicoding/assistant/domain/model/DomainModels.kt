@@ -82,6 +82,7 @@ data class StreamChunk(
     val delta: String,
     val finished: Boolean = false,
     val error: String? = null,
+    val truncated: Boolean = false,
 )
 
 data class Attachment(

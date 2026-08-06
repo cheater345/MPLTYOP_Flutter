@@ -45,7 +45,11 @@ class SseStreamEngine(
     private val headerJson: String,
 ) {
 
-    fun stream(request: ChatRequestData, abortRef: AbortRef): Flow<String> = callbackFlow {
+    fun stream(
+        request: ChatRequestData,
+        abortRef: AbortRef,
+        onFinish: ((truncated: Boolean) -> Unit)? = null,
+    ): Flow<String> = callbackFlow {
         try {
             val reqBuilder: Request.Builder
             when (kind) {
@@ -130,6 +134,13 @@ class SseStreamEngine(
             applyCustomHeaders(reqBuilder, headerJson)
 
             val httpRequest = reqBuilder.build()
+            var truncated = false
+            var finishReported = false
+            fun reportFinish() {
+                if (finishReported) return
+                finishReported = true
+                onFinish?.invoke(truncated)
+            }
             EventSources.createFactory(client).newEventSource(
                 httpRequest,
                 object : EventSourceListener() {
@@ -141,6 +152,7 @@ class SseStreamEngine(
                         when (data.trim()) {
                             "", "[DONE]" -> {
                                 eventSource.cancel()
+                                reportFinish()
                                 close()
                             }
                             else -> {
@@ -163,6 +175,17 @@ class SseStreamEngine(
                                                 ?.optString("content", null)
                                     }
                                     if (!delta.isNullOrEmpty()) trySend(delta)
+                                    val finishReason = when (kind) {
+                                        ProviderKind.GEMINI -> json.optJSONArray("candidates")
+                                            ?.optJSONObject(0)
+                                            ?.optString("finishReason", null)
+                                        else -> json.optJSONArray("choices")
+                                            ?.optJSONObject(0)
+                                            ?.optString("finish_reason", null)
+                                    }
+                                    if (finishReason == "length" || finishReason == "MAX_TOKENS" || finishReason == "context_length_exceeded") {
+                                        truncated = true
+                                    }
                                 } catch (_: Exception) {
                                 }
                             }
@@ -170,11 +193,17 @@ class SseStreamEngine(
                     }
 
                     override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
-                        if (!abortRef.aborted) close(t ?: IOException("Stream failed"))
+                        if (!abortRef.aborted) {
+                            reportFinish()
+                            close(t ?: IOException("Stream failed"))
+                        }
                     }
 
                     override fun onClosed(eventSource: EventSource) {
-                        if (!abortRef.aborted) close()
+                        if (!abortRef.aborted) {
+                            reportFinish()
+                            close()
+                        }
                     }
                 }
             )
