@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:just_audio_background/just_audio_background.dart';
-import 'package:audio_service/audio_service.dart';
 
 import 'core/constants.dart';
 import 'core/di.dart';
@@ -15,7 +14,6 @@ import 'presentation/screens/library/library_screen.dart';
 import 'presentation/screens/playlist_detail/playlist_detail_screen.dart';
 import 'presentation/screens/now_playing/now_playing_screen.dart';
 import 'presentation/screens/settings/settings_screen.dart';
-import 'services/playback_service.dart';
 import 'presentation/widgets/player_bar.dart';
 
 Future<void> main() async {
@@ -37,22 +35,15 @@ Future<void> main() async {
   await Hive.openBox(AppConstants.boxHistory);
   await Hive.openBox(AppConstants.boxSettings);
   
-  // Initialize JustAudioBackground for background audio
+  // Initialize JustAudioBackground for background audio.
+  // This also calls AudioService.init internally, so no separate
+  // AudioService.init should be called (doing so would create a second
+  // PlaybackService/AudioPlayer, which just_audio_background forbids).
   await JustAudioBackground.init(
     androidNotificationChannelId: 'com.cheater345.mpltyop.channel.audio',
     androidNotificationChannelName: 'MPLTYOP Audio',
     androidNotificationOngoing: true,
-  );
-  
-  // Initialize AudioService
-  await AudioService.init(
-    builder: () => PlaybackService(),
-    config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.cheater345.mpltyop.channel.audio',
-      androidNotificationChannelName: 'MPLTYOP Audio',
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
-    ),
+    androidStopForegroundOnPause: true,
   );
 
   runApp(const ProviderScope(child: MPLTYOPApp()));
