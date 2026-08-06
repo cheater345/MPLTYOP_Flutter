@@ -32,9 +32,10 @@ class YtMusicApi {
     }
 
     final last = await _plugin.checkStatus();
+    final pluginLastError = YtFlutterMusicapi.lastError;
     throw Exception(
       'Python not ready: ${last.message} '
-      '(${last.data?.statusSummary ?? 'unknown'})',
+      '(plugin lastError: $pluginLastError)',
     );
   }
 

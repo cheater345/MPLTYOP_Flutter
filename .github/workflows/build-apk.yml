@@ -46,6 +46,7 @@ jobs:
           echo "Plugin dir: $PLUGIN_DIR"
           if [ -n "$PLUGIN_DIR" ]; then
             sed -i '/buildPython/d' "$PLUGIN_DIR/android/build.gradle"
+            sed -i 's|throw Exception("Module import failed", e.cause ?: e)|throw Exception("Module import failed: ${e.cause?.stackTrace ?: e.cause ?: e}", e.cause ?: e)|' "$PLUGIN_DIR/android/src/main/kotlin/com/golanpiyush/yt_flutter_musicapi/YtFlutterMusicapiPlugin.kt"
             echo "Plugin patched"
           else
             echo "ERROR: plugin not found"; exit 1

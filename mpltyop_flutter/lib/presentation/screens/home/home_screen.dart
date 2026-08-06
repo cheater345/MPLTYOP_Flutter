@@ -248,10 +248,8 @@ class _SectionTrackCard extends HookConsumerWidget {
             padding: const EdgeInsets.all(8),
             child: Text(
               '$err',
-              style: const TextStyle(fontSize: 10, color: Colors.red),
+              style: const TextStyle(fontSize: 11, color: Colors.red),
               textAlign: TextAlign.center,
-              maxLines: 5,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ),
