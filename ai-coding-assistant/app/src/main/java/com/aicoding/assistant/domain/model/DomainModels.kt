@@ -31,7 +31,10 @@ enum class ProviderKind {
     CUSTOM,
     OPENCODE,
     ZEN,
-    LOCAL
+    LOCAL,
+    GROQ,
+    MISTRAL,
+    CEREBRAS,
 }
 
 data class Provider(

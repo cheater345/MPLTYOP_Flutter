@@ -90,6 +90,27 @@ class ProviderRepository(private val dao: ProviderDao, private val context: Cont
                 systemPrompt = "You are a helpful coding assistant."
             ),
             Provider(
+                id = 0, name = "Groq (free)", kind = ProviderKind.GROQ,
+                baseUrl = "https://api.groq.com/openai/v1", apiKey = "",
+                temperature = 0.7f, topP = 1f, maxTokens = 4096, stream = true,
+                timeoutSeconds = 120, headerJson = "", enabled = true,
+                systemPrompt = "You are a helpful coding assistant."
+            ),
+            Provider(
+                id = 0, name = "Mistral (free)", kind = ProviderKind.MISTRAL,
+                baseUrl = "https://api.mistral.ai/v1", apiKey = "",
+                temperature = 0.7f, topP = 1f, maxTokens = 4096, stream = true,
+                timeoutSeconds = 120, headerJson = "", enabled = true,
+                systemPrompt = "You are a helpful coding assistant."
+            ),
+            Provider(
+                id = 0, name = "Cerebras (fast)", kind = ProviderKind.CEREBRAS,
+                baseUrl = "https://api.cerebras.ai/v1", apiKey = "",
+                temperature = 0.7f, topP = 1f, maxTokens = 4096, stream = true,
+                timeoutSeconds = 120, headerJson = "", enabled = true,
+                systemPrompt = "You are a helpful coding assistant."
+            ),
+            Provider(
                 id = 0, name = "Ollama", kind = ProviderKind.OLLAMA,
                 baseUrl = "http://10.0.2.2:11434/v1", apiKey = "",
                 temperature = 0.7f, topP = 1f, maxTokens = 4096, stream = true,

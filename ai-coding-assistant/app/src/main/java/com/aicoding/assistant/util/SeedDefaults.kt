@@ -28,6 +28,27 @@ object SeedDefaults {
                     systemPrompt = "You are a helpful coding assistant.",
                 ),
                 ProviderEntity(
+                    name = "Groq (free)", kind = "GROQ",
+                    baseUrl = "https://api.groq.com/openai/v1", apiKeyEncrypted = "",
+                    temperature = 0.7f, topP = 1f, maxTokens = 4096, stream = true,
+                    timeoutSeconds = 120, headerJson = "", enabled = true,
+                    systemPrompt = "You are a helpful coding assistant.",
+                ),
+                ProviderEntity(
+                    name = "Mistral (free)", kind = "MISTRAL",
+                    baseUrl = "https://api.mistral.ai/v1", apiKeyEncrypted = "",
+                    temperature = 0.7f, topP = 1f, maxTokens = 4096, stream = true,
+                    timeoutSeconds = 120, headerJson = "", enabled = true,
+                    systemPrompt = "You are a helpful coding assistant.",
+                ),
+                ProviderEntity(
+                    name = "Cerebras (fast)", kind = "CEREBRAS",
+                    baseUrl = "https://api.cerebras.ai/v1", apiKeyEncrypted = "",
+                    temperature = 0.7f, topP = 1f, maxTokens = 4096, stream = true,
+                    timeoutSeconds = 120, headerJson = "", enabled = true,
+                    systemPrompt = "You are a helpful coding assistant.",
+                ),
+                ProviderEntity(
                     name = "Ollama", kind = "OLLAMA",
                     baseUrl = "http://10.0.2.2:11434/v1", apiKeyEncrypted = "",
                     temperature = 0.7f, topP = 1f, maxTokens = 4096, stream = true,

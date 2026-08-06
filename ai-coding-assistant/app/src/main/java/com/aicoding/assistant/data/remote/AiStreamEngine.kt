@@ -19,6 +19,11 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 
+data class ImagePayload(
+    val mimeType: String,
+    val base64: String,
+)
+
 data class ChatRequestData(
     val messages: List<Pair<String, String>>,
     val model: String,
@@ -27,6 +32,7 @@ data class ChatRequestData(
     val maxTokens: Int,
     val stream: Boolean,
     val systemPrompt: String?,
+    val images: List<ImagePayload> = emptyList(),
 )
 
 data class AbortRef(var aborted: Boolean = false)
@@ -53,6 +59,20 @@ class SseStreamEngine(
                                 .put("parts", parts)
                         )
                     }
+                    if (request.images.isNotEmpty()) {
+                        val lastUser = contents.getJSONObject(contents.length() - 1)
+                        val parts = lastUser.getJSONArray("parts")
+                        request.images.forEach { img ->
+                            parts.put(
+                                JSONObject().put(
+                                    "inline_data",
+                                    JSONObject()
+                                        .put("mime_type", img.mimeType)
+                                        .put("data", img.base64)
+                                )
+                            )
+                        }
+                    }
                     val payload = JSONObject()
                         .put("contents", contents)
                         .put(
@@ -74,8 +94,23 @@ class SseStreamEngine(
                     request.systemPrompt?.let {
                         messages.put(JSONObject().put("role", "system").put("content", it))
                     }
-                    request.messages.forEach { (role, content) ->
-                        messages.put(JSONObject().put("role", role).put("content", content))
+                    request.messages.forEachIndexed { idx, (role, content) ->
+                        val contentJson: Any = if (request.images.isNotEmpty() && idx == request.messages.lastIndex) {
+                            val parts = JSONArray()
+                                .put(JSONObject().put("type", "text").put("text", content))
+                            request.images.forEach { img ->
+                                parts.put(
+                                    JSONObject().put("type", "image_url").put(
+                                        "image_url",
+                                        JSONObject().put("url", "data:${img.mimeType};base64,${img.base64}")
+                                    )
+                                )
+                            }
+                            parts
+                        } else {
+                            content
+                        }
+                        messages.put(JSONObject().put("role", role).put("content", contentJson))
                     }
                     val payload = JSONObject()
                         .put("model", request.model)

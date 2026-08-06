@@ -1,13 +1,20 @@
 package com.aicoding.assistant.data.repository
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
 import com.aicoding.assistant.data.local.ChatDao
 import com.aicoding.assistant.data.local.ChatEntity
 import com.aicoding.assistant.data.local.MessageDao
 import com.aicoding.assistant.data.local.MessageEntity
 import com.aicoding.assistant.data.remote.AbortRef
 import com.aicoding.assistant.data.remote.ChatRequestData
+import com.aicoding.assistant.data.remote.ImagePayload
 import com.aicoding.assistant.data.remote.SseStreamEngine
 import com.aicoding.assistant.domain.model.ApiKey
+import com.aicoding.assistant.domain.model.Attachment
 import com.aicoding.assistant.domain.model.Chat
 import com.aicoding.assistant.domain.model.Message
 import com.aicoding.assistant.domain.model.MessageRole
@@ -23,6 +30,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
@@ -31,9 +41,17 @@ class ChatRepository(
     private val messageDao: MessageDao,
     private val providerRepository: ProviderRepository,
     private val apiKeyRepository: ApiKeyRepository,
+    private val context: Context,
 ) {
 
     private val activeJobs = ConcurrentHashMap<Long, Job>()
+
+    private val sharedClient: OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(90, TimeUnit.SECONDS)
+        .writeTimeout(90, TimeUnit.SECONDS)
+        .retryOnConnectionFailure(true)
+        .build()
 
     fun observeChats(): Flow<List<Chat>> =
         chatDao.observeAll().map { list -> list.map { it.toDomain() } }
@@ -83,14 +101,19 @@ class ChatRepository(
         text: String,
         providerId: Long? = null,
         modelOverride: String? = null,
+        attachments: List<Attachment> = emptyList(),
         onError: (String) -> Unit = {},
         onFinished: (Long, String) -> Unit = { _, _ -> },
     ): Job = GlobalScope.launch(Dispatchers.IO) {
         try {
             val now = System.currentTimeMillis()
             val chat = chatDao.getById(chatId)
+            val imagePayloads = prepareImages(attachments)
             val userMessageId = messageDao.insert(
-                MessageEntity(chatId = chatId, role = MessageRole.USER.name, content = text, createdAt = now)
+                MessageEntity(
+                    chatId = chatId, role = MessageRole.USER.name, content = text, createdAt = now,
+                    attachmentPaths = attachments.map { it.uri }.map { saveAttachment(context, Uri.parse(it)) },
+                )
             )
             if (chat != null && (chat.title.isBlank() || chat.title == "New Chat")) {
                 chatDao.rename(chatId, text.take(40))
@@ -128,6 +151,7 @@ class ChatRepository(
                 maxTokens = provider.maxTokens,
                 stream = provider.stream,
                 systemPrompt = provider.systemPrompt.takeIf { it.isNotBlank() },
+                images = imagePayloads,
             )
 
             val ok = deliver(
@@ -205,19 +229,59 @@ class ChatRepository(
     }
 
     private fun buildEngine(provider: Provider, key: ApiKey?): SseStreamEngine {
-        val timeout = provider.timeoutSeconds.toLong()
-        val client = OkHttpClient.Builder()
-            .connectTimeout(timeout, TimeUnit.SECONDS)
-            .readTimeout(timeout, TimeUnit.SECONDS)
-            .writeTimeout(timeout, TimeUnit.SECONDS)
-            .build()
         return SseStreamEngine(
-            client = client,
+            client = sharedClient,
             baseUrl = provider.baseUrl,
             apiKey = key?.value ?: provider.apiKey,
             kind = provider.kind,
             headerJson = provider.headerJson,
         )
+    }
+
+    private fun prepareImages(attachments: List<Attachment>): List<ImagePayload> {
+        if (attachments.isEmpty()) return emptyList()
+        val out = mutableListOf<ImagePayload>()
+        for (attachment in attachments) {
+            try {
+                val uri = Uri.parse(attachment.uri)
+                val stream = context.contentResolver.openInputStream(uri) ?: continue
+                val bitmap = BitmapFactory.decodeStream(stream)
+                stream.close()
+                if (bitmap == null) continue
+                val scaled = scaleDown(bitmap, 1568)
+                if (scaled !== bitmap) bitmap.recycle()
+                val outStream = ByteArrayOutputStream()
+                scaled.compress(Bitmap.CompressFormat.JPEG, 85, outStream)
+                scaled.recycle()
+                val data = Base64.encodeToString(outStream.toByteArray(), Base64.NO_WRAP)
+                outStream.close()
+                out += ImagePayload("image/jpeg", data)
+            } catch (_: Exception) {
+                // skip broken image
+            }
+        }
+        return out
+    }
+
+    private fun scaleDown(bitmap: Bitmap, maxDim: Int): Bitmap {
+        val w = bitmap.width
+        val h = bitmap.height
+        val largest = maxOf(w, h)
+        if (largest <= maxDim) return bitmap
+        val ratio = maxDim.toFloat() / largest
+        return Bitmap.createScaledBitmap(bitmap, (w * ratio).toInt(), (h * ratio).toInt(), true)
+    }
+
+    private fun saveAttachment(context: Context, uri: Uri): String {
+        try {
+            val stream = context.contentResolver.openInputStream(uri) ?: return uri.toString()
+            val dir = File(context.filesDir, "megumi_attachments").apply { mkdirs() }
+            val file = File(dir, "img_${System.currentTimeMillis()}.bin")
+            FileOutputStream(file).use { out -> stream.copyTo(out) }
+            return file.absolutePath
+        } catch (_: Exception) {
+            return uri.toString()
+        }
     }
 
     private fun defaultModel(provider: Provider): String = when (provider.kind) {

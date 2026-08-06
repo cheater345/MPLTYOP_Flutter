@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.aicoding.assistant.data.remote.ModelFetcher
 import com.aicoding.assistant.data.repository.ChatRepository
 import com.aicoding.assistant.data.repository.ProviderRepository
+import com.aicoding.assistant.domain.model.Attachment
 import com.aicoding.assistant.domain.model.Message
 import com.aicoding.assistant.domain.model.MessageRole
 import com.aicoding.assistant.domain.model.ModelInfo
@@ -60,6 +61,9 @@ class ChatViewModel @Inject constructor(
     private val _composerText = MutableStateFlow("")
     val composerText: StateFlow<String> = _composerText
 
+    private val _attachments = MutableStateFlow<List<Attachment>>(emptyList())
+    val attachments: StateFlow<List<Attachment>> = _attachments
+
     sealed interface SendState {
         object Idle : SendState
         data object Streaming : SendState
@@ -98,10 +102,27 @@ class ChatViewModel @Inject constructor(
             ModelInfo("meta-llama/llama-3.1-8b-instruct:free", "Llama 3.1 8B (free)"),
             ModelInfo("deepseek/deepseek-chat", "DeepSeek Chat"),
             ModelInfo("openai/gpt-4o-mini", "GPT-4o Mini"),
+            ModelInfo("google/gemini-2.0-flash-exp:free", "Gemini 2.0 Flash (free)"),
+            ModelInfo("qwen/qwen-2.5-72b-instruct", "Qwen 2.5 72B"),
         )
         ProviderKind.GEMINI -> listOf(
             ModelInfo("gemini-1.5-flash", "Gemini 1.5 Flash"),
             ModelInfo("gemini-1.5-pro", "Gemini 1.5 Pro"),
+            ModelInfo("gemini-2.0-flash", "Gemini 2.0 Flash"),
+        )
+        ProviderKind.GROQ -> listOf(
+            ModelInfo("llama-3.3-70b-versatile", "Llama 3.3 70B"),
+            ModelInfo("llama-3.1-8b-instant", "Llama 3.1 8B (fast)"),
+            ModelInfo("gemma2-9b-it", "Gemma 2 9B"),
+        )
+        ProviderKind.MISTRAL -> listOf(
+            ModelInfo("open-mistral-nemo", "Mistral Nemo"),
+            ModelInfo("mistral-small-latest", "Mistral Small"),
+            ModelInfo("codestral-latest", "Codestral"),
+        )
+        ProviderKind.CEREBRAS -> listOf(
+            ModelInfo("llama-3.3-70b", "Llama 3.3 70B"),
+            ModelInfo("llama-3.1-8b", "Llama 3.1 8B"),
         )
         ProviderKind.OLLAMA, ProviderKind.LM_STUDIO, ProviderKind.LOCAL -> listOf(
             ModelInfo("llama3.2", "Llama 3.2"),
@@ -122,9 +143,26 @@ class ChatViewModel @Inject constructor(
         _composerText.value = text
     }
 
+    fun addAttachment(attachment: Attachment) {
+        val current = _attachments.value
+        if (current.size >= 4) return
+        if (current.any { it.uri == attachment.uri }) return
+        _attachments.value = current + attachment
+    }
+
+    fun removeAttachment(uri: String) {
+        _attachments.value = _attachments.value.filterNot { it.uri == uri }
+    }
+
+    fun clearAttachments() {
+        _attachments.value = emptyList()
+    }
+
     fun send(text: String, model: String? = null) {
-        if (text.isBlank()) return
+        if (text.isBlank() && _attachments.value.isEmpty()) return
+        val attachments = _attachments.value
         _composerText.value = ""
+        clearAttachments()
         _sendState.value = SendState.Streaming
         viewModelScope.launch {
             chatRepository.sendMessage(
@@ -132,6 +170,7 @@ class ChatViewModel @Inject constructor(
                 text = text,
                 providerId = _selectedProviderId.value,
                 modelOverride = model ?: _selectedModel.value,
+                attachments = attachments,
                 onError = { msg ->
                     _error.value = msg
                     _sendState.value = SendState.Idle

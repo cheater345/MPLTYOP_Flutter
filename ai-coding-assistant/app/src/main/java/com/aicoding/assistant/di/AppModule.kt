@@ -76,7 +76,8 @@ object AppModule {
         messageDao: MessageDao,
         providerRepository: ProviderRepository,
         apiKeyRepository: ApiKeyRepository,
-    ): ChatRepository = ChatRepository(chatDao, messageDao, providerRepository, apiKeyRepository)
+        @ApplicationContext context: Context,
+    ): ChatRepository = ChatRepository(chatDao, messageDao, providerRepository, apiKeyRepository, context)
 
     @Provides
     @Singleton
