@@ -193,7 +193,10 @@ class SseStreamEngine(
                     }
 
                     override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
-                        if (!abortRef.aborted) {
+                        if (abortRef.aborted) return
+                        if (finishReported) {
+                            close()
+                        } else {
                             reportFinish()
                             close(t ?: IOException("Stream failed"))
                         }

@@ -55,9 +55,16 @@ object SeedDefaults {
                     timeoutSeconds = 180, headerJson = "", enabled = true,
                     systemPrompt = "You are a helpful coding assistant.",
                 ),
-                ProviderEntity(
+ProviderEntity(
                     name = "OpenAI Compatible", kind = "OPENAI_COMPAT",
                     baseUrl = "https://api.openai.com/v1", apiKeyEncrypted = "",
+                    temperature = 0.7f, topP = 1f, maxTokens = 8192, stream = true,
+                    timeoutSeconds = 120, headerJson = "", enabled = true,
+                    systemPrompt = "You are a helpful coding assistant.",
+                ),
+                ProviderEntity(
+                    name = "DeepSeek (cheap)", kind = "OPENAI_COMPAT",
+                    baseUrl = "https://api.deepseek.com", apiKeyEncrypted = "",
                     temperature = 0.7f, topP = 1f, maxTokens = 8192, stream = true,
                     timeoutSeconds = 120, headerJson = "", enabled = true,
                     systemPrompt = "You are a helpful coding assistant.",

@@ -184,7 +184,12 @@ class ChatRepository(
                 }
             }
             if (!ok) {
-                messageDao.delete(assistantId)
+                val partial = messageDao.getById(assistantId)?.content ?: ""
+                if (partial.isBlank()) {
+                    messageDao.delete(assistantId)
+                } else {
+                    messageDao.updateError(assistantId, "Connection lost — reply may be incomplete")
+                }
                 onError("All API keys failed or request returned no content.")
                 return@launch
             }
@@ -311,7 +316,7 @@ class ChatRepository(
         ProviderKind.OPENROUTER -> "meta-llama/llama-3.1-8b-instruct:free"
         ProviderKind.OLLAMA, ProviderKind.LM_STUDIO, ProviderKind.LOCAL -> "llama3.2"
         ProviderKind.GEMINI -> "gemini-1.5-flash"
-        else -> "gpt-4o-mini"
+        else -> if (provider.baseUrl.contains("deepseek", ignoreCase = true)) "deepseek-chat" else "gpt-4o-mini"
     }
 
     private fun isRateLimit(e: Throwable): Boolean {

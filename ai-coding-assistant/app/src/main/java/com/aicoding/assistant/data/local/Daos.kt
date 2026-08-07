@@ -67,6 +67,9 @@ interface MessageDao {
 
     @Query("UPDATE messages SET content = :content, error = NULL WHERE id = :id")
     suspend fun updateContent(id: Long, content: String)
+
+    @Query("UPDATE messages SET error = :error WHERE id = :id")
+    suspend fun updateError(id: Long, error: String)
 }
 
 @Dao
