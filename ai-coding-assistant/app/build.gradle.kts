@@ -80,5 +80,7 @@ dependencies {
 
     implementation("io.coil-kt:coil-compose:2.7.0")
 
+    implementation("com.google.mediapipe:tasks-genai:0.10.35")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

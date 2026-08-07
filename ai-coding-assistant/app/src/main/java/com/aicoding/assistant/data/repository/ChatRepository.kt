@@ -12,6 +12,7 @@ import com.aicoding.assistant.data.local.MessageEntity
 import com.aicoding.assistant.data.remote.AbortRef
 import com.aicoding.assistant.data.remote.ChatRequestData
 import com.aicoding.assistant.data.remote.ImagePayload
+import com.aicoding.assistant.data.remote.LocalLlmEngine
 import com.aicoding.assistant.data.remote.SseStreamEngine
 import com.aicoding.assistant.domain.model.ApiKey
 import com.aicoding.assistant.domain.model.Attachment
@@ -41,6 +42,7 @@ class ChatRepository(
     private val messageDao: MessageDao,
     private val providerRepository: ProviderRepository,
     private val apiKeyRepository: ApiKeyRepository,
+    private val localLlm: LocalLlmEngine,
     private val context: Context,
 ) {
 
@@ -137,6 +139,21 @@ class ChatRepository(
             val model = modelOverride ?: defaultModel(provider)
             val keys = apiKeyRepository.getEnabledForProvider(provider.id)
 
+            if (provider.kind == ProviderKind.MEGUMI_OFFLINE) {
+                val offlineOk = generateOffline(chatId, text, assistantId, onDelta = { delta ->
+                    val current = messageDao.getById(assistantId)?.content ?: ""
+                    messageDao.updateContent(assistantId, current + delta)
+                })
+                if (!offlineOk) {
+                    messageDao.delete(assistantId)
+                    onError("Offline model not ready. Download it first (Settings > Providers > MEGUMI Offline).")
+                } else {
+                    chatDao.touch(chatId, System.currentTimeMillis())
+                    onFinished(assistantId, messageDao.getById(assistantId)?.content ?: "")
+                }
+                return@launch
+            }
+
             val history = messageDao.observeForChat(chatId).first()
                 .filter { it.id != assistantId && it.id != userMessageId }
                 .filter { it.role == "user" || it.role == "assistant" }
@@ -205,6 +222,36 @@ class ChatRepository(
     }
 
     private data class StreamOutcome(val streamed: Boolean, val truncated: Boolean)
+
+    private suspend fun generateOffline(
+        chatId: Long,
+        text: String,
+        assistantId: Long,
+        onDelta: suspend (String) -> Unit,
+    ): Boolean {
+        return try {
+            val history = messageDao.observeForChat(chatId).first()
+                .filter { it.id != assistantId }
+                .filter { it.role == "user" || it.role == "assistant" }
+                .map { it.role to it.content }
+                .takeLast(10)
+            val conversation = history + listOf("user" to text)
+            val sb = StringBuilder()
+            for ((role, content) in conversation) {
+                if (role == "user") {
+                    sb.append("<start_of_turn>user\n").append(content).append("<end_of_turn>\n")
+                } else {
+                    sb.append("<start_of_turn>model\n").append(content).append("<end_of_turn>\n")
+                }
+            }
+            sb.append("<start_of_turn>model\n")
+            localLlm.generate(sb.toString(), onDelta)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            false
+        }
+    }
 
     private suspend fun deliver(
         provider: Provider,

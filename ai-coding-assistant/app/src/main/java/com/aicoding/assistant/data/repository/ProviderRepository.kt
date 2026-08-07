@@ -145,6 +145,13 @@ class ProviderRepository(private val dao: ProviderDao, private val context: Cont
                 timeoutSeconds = 120, headerJson = "", enabled = true,
                 systemPrompt = "You are a helpful coding assistant."
             ),
+            Provider(
+                id = 0, name = "MEGUMI Offline", kind = ProviderKind.MEGUMI_OFFLINE,
+                baseUrl = "", apiKey = "",
+                temperature = 0.7f, topP = 1f, maxTokens = 2048, stream = true,
+                timeoutSeconds = 600, headerJson = "", enabled = true,
+                systemPrompt = "You are a helpful coding assistant."
+            ),
         )
     }
 }

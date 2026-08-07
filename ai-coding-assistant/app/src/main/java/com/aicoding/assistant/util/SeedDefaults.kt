@@ -90,6 +90,13 @@ ProviderEntity(
                     timeoutSeconds = 120, headerJson = "", enabled = true,
                     systemPrompt = "You are a helpful coding assistant.",
                 ),
+                ProviderEntity(
+                    name = "MEGUMI Offline", kind = "MEGUMI_OFFLINE",
+                    baseUrl = "", apiKeyEncrypted = "",
+                    temperature = 0.7f, topP = 1f, maxTokens = 2048, stream = true,
+                    timeoutSeconds = 600, headerJson = "", enabled = true,
+                    systemPrompt = "You are a helpful coding assistant.",
+                ),
             )
             defaults.forEach { dao.insert(it) }
         }

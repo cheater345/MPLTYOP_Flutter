@@ -38,15 +38,18 @@ import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -76,6 +79,7 @@ import com.aicoding.assistant.domain.model.Attachment
 import com.aicoding.assistant.domain.model.MessageRole
 import com.aicoding.assistant.domain.model.ModelInfo
 import com.aicoding.assistant.domain.model.Provider
+import com.aicoding.assistant.domain.model.ProviderKind
 import com.aicoding.assistant.ui.components.MarkdownText
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -149,6 +153,7 @@ fun ChatScreen(
                     modelsLoading = modelsLoading,
                     onSelectModel = { viewModel.selectModel(it) },
                 )
+                OfflineModelBanner(viewModel = viewModel)
                 ChatInputBar(
                     text = composerText,
                     attachments = attachments,
@@ -302,6 +307,56 @@ private fun ModelSelectorBar(
             }
         }
         Spacer(Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun OfflineModelBanner(viewModel: ChatViewModel) {
+    val providers by viewModel.providers.collectAsState()
+    val selectedProviderId by viewModel.selectedProviderId.collectAsState()
+    val localState by viewModel.localLlmState.collectAsState()
+    val isOffline = providers.firstOrNull { it.id == selectedProviderId }?.kind == ProviderKind.MEGUMI_OFFLINE
+    if (!isOffline || localState.exists) return
+
+    Surface(
+        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            Text(
+                "Offline AI (no API key) — Gemma 3 1B, gumagana kahit walang internet",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+            Spacer(Modifier.height(6.dp))
+            if (localState.downloading) {
+                LinearProgressIndicator(
+                    progress = { localState.progress },
+                    modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Downloading... ${(localState.progress * 100).toInt()}%",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        localState.error ?: "Model not installed yet (~600 MB, once)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Button(
+                        onClick = { viewModel.downloadLocalModel() },
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                    ) {
+                        Text("Download")
+                    }
+                }
+            }
+        }
     }
 }
 

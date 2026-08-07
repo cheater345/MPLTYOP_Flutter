@@ -35,6 +35,7 @@ enum class ProviderKind {
     GROQ,
     MISTRAL,
     CEREBRAS,
+    MEGUMI_OFFLINE,
 }
 
 data class Provider(

@@ -3,6 +3,7 @@ package com.aicoding.assistant.ui.screens.chat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aicoding.assistant.data.remote.LocalLlmEngine
 import com.aicoding.assistant.data.remote.ModelFetcher
 import com.aicoding.assistant.data.repository.ChatRepository
 import com.aicoding.assistant.data.repository.ProviderRepository
@@ -26,6 +27,7 @@ class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val providerRepository: ProviderRepository,
     private val modelFetcher: ModelFetcher,
+    private val localLlm: LocalLlmEngine,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -64,12 +66,15 @@ class ChatViewModel @Inject constructor(
     private val _attachments = MutableStateFlow<List<Attachment>>(emptyList())
     val attachments: StateFlow<List<Attachment>> = _attachments
 
+    val localLlmState: StateFlow<LocalLlmEngine.State> = localLlm.state
+
     sealed interface SendState {
         object Idle : SendState
         data object Streaming : SendState
     }
 
     init {
+        localLlm.refresh()
         viewModelScope.launch {
             val enabled = providerRepository.getAllEnabled()
             val preferred = enabled.firstOrNull()
@@ -77,6 +82,10 @@ class ChatViewModel @Inject constructor(
                 selectProvider(preferred)
             }
         }
+    }
+
+    fun downloadLocalModel() {
+        viewModelScope.launch { localLlm.download() }
     }
 
     fun selectProvider(provider: Provider) {
@@ -128,6 +137,9 @@ class ChatViewModel @Inject constructor(
             ModelInfo("llama3.2", "Llama 3.2"),
             ModelInfo("qwen2.5:7b", "Qwen 2.5 7B"),
             ModelInfo("mistral", "Mistral"),
+        )
+        ProviderKind.MEGUMI_OFFLINE -> listOf(
+            ModelInfo("gemma-3-1b-offline", "Gemma 3 1B (offline)"),
         )
         else -> listOf(
             ModelInfo("gpt-4o-mini", "GPT-4o Mini"),

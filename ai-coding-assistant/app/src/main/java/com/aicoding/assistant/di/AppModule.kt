@@ -7,6 +7,7 @@ import com.aicoding.assistant.data.local.ChatDao
 import com.aicoding.assistant.data.local.MessageDao
 import com.aicoding.assistant.data.local.ProviderDao
 import com.aicoding.assistant.data.local.PromptDao
+import com.aicoding.assistant.data.remote.LocalLlmEngine
 import com.aicoding.assistant.data.remote.ModelFetcher
 import com.aicoding.assistant.data.repository.ApiKeyRepository
 import com.aicoding.assistant.data.repository.ChatRepository
@@ -71,13 +72,26 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideLocalLlmEngine(@ApplicationContext context: Context): LocalLlmEngine =
+        LocalLlmEngine(context)
+
+    @Provides
+    @Singleton
     fun provideChatRepository(
         chatDao: ChatDao,
         messageDao: MessageDao,
         providerRepository: ProviderRepository,
         apiKeyRepository: ApiKeyRepository,
+        localLlmEngine: com.aicoding.assistant.data.remote.LocalLlmEngine,
         @ApplicationContext context: Context,
-    ): ChatRepository = ChatRepository(chatDao, messageDao, providerRepository, apiKeyRepository, context)
+    ): ChatRepository = ChatRepository(
+        chatDao,
+        messageDao,
+        providerRepository,
+        apiKeyRepository,
+        localLlmEngine,
+        context,
+    )
 
     @Provides
     @Singleton
