@@ -139,7 +139,7 @@ class ChatViewModel @Inject constructor(
             ModelInfo("mistral", "Mistral"),
         )
         ProviderKind.MEGUMI_OFFLINE -> listOf(
-            ModelInfo("gemma-3-1b-offline", "Gemma 3 1B (offline)"),
+            ModelInfo("qwen2.5-0.5b-offline", "Qwen 2.5 0.5B (offline)"),
         )
         else -> listOf(
             ModelInfo("gpt-4o-mini", "GPT-4o Mini"),

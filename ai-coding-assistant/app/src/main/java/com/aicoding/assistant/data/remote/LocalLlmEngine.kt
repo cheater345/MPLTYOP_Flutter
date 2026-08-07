@@ -29,8 +29,8 @@ class LocalLlmEngine(
 
     companion object {
         const val MODEL_URL =
-            "https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/Gemma3-1B-IT_multi-prefill-seq_q4_ekv2048.task"
-        const val MODEL_FILE = "megumi-gemma3-1b.task"
+            "https://huggingface.co/litert-community/Qwen2.5-0.5B-Instruct/resolve/main/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task"
+        const val MODEL_FILE = "megumi-qwen2.5-0.5b.task"
     }
 
     private val client = OkHttpClient.Builder()

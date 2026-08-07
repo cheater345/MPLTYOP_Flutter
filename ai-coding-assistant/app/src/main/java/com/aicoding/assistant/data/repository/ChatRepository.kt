@@ -237,14 +237,12 @@ class ChatRepository(
                 .takeLast(10)
             val conversation = history + listOf("user" to text)
             val sb = StringBuilder()
+            sb.append("<|im_start|>system\n").append("You are MEGUMI, a helpful assistant.").append("<|im_end|>\n")
             for ((role, content) in conversation) {
-                if (role == "user") {
-                    sb.append("<start_of_turn>user\n").append(content).append("<end_of_turn>\n")
-                } else {
-                    sb.append("<start_of_turn>model\n").append(content).append("<end_of_turn>\n")
-                }
+                val tag = if (role == "user") "user" else "assistant"
+                sb.append("<|im_start|>$tag\n").append(content).append("<|im_end|>\n")
             }
-            sb.append("<start_of_turn>model\n")
+            sb.append("<|im_start|>assistant\n")
             localLlm.generate(sb.toString(), onDelta)
         } catch (e: CancellationException) {
             throw e

@@ -17,7 +17,7 @@ class ModelFetcher(private val client: OkHttpClient) {
         try {
             when (provider.kind) {
                 ProviderKind.GEMINI -> fetchGemini(provider)
-                ProviderKind.MEGUMI_OFFLINE -> listOf(ModelInfo("gemma-3-1b-offline", "Gemma 3 1B (offline)"))
+                ProviderKind.MEGUMI_OFFLINE -> listOf(ModelInfo("qwen2.5-0.5b-offline", "Qwen 2.5 0.5B (offline)"))
                 else -> fetchOpenAi(provider)
             }
         } catch (e: Exception) {

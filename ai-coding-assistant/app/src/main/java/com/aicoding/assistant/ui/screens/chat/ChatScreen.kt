@@ -324,7 +324,7 @@ private fun OfflineModelBanner(viewModel: ChatViewModel) {
     ) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
             Text(
-                "Offline AI (no API key) — Gemma 3 1B, gumagana kahit walang internet",
+                "Offline AI (no API key) — Qwen 2.5 0.5B, gumagana kahit walang internet",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
@@ -343,7 +343,7 @@ private fun OfflineModelBanner(viewModel: ChatViewModel) {
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        localState.error ?: "Model not installed yet (~600 MB, once)",
+                        localState.error ?: "Model not installed yet (~550 MB, once)",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.weight(1f),
