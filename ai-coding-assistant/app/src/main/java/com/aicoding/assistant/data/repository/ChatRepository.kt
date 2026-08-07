@@ -235,14 +235,21 @@ class ChatRepository(
                 .filter { it.role == "user" || it.role == "assistant" }
                 .map { it.role to it.content }
                 .takeLast(10)
-            val conversation = history + listOf("user" to text)
-            val sb = StringBuilder()
-            sb.append("<|im_start|>system\n").append("You are MEGUMI, a helpful assistant.").append("<|im_end|>\n")
-            for ((role, content) in conversation) {
-                val tag = if (role == "user") "user" else "assistant"
-                sb.append("<|im_start|>$tag\n").append(content).append("<|im_end|>\n")
+            val conversation = if (history.lastOrNull()?.first == "user") {
+                history.dropLast(1) + listOf("user" to text)
+            } else {
+                history + listOf("user" to text)
             }
-            sb.append("<|im_start|>assistant\n")
+            val sb = StringBuilder()
+            sb.append("System: You are MEGUMI, a helpful assistant. Answer the user's last question directly and completely.\n\n")
+            for ((role, content) in conversation) {
+                if (role == "user") {
+                    sb.append("User: ").append(content.replace('\n', ' ')).append("\n")
+                } else {
+                    sb.append("Assistant: ").append(content.trim()).append("\n\n")
+                }
+            }
+            sb.append("Assistant: ")
             localLlm.generate(sb.toString(), onDelta)
         } catch (e: CancellationException) {
             throw e
