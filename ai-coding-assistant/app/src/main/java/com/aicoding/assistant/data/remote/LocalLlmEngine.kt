@@ -104,6 +104,7 @@ class LocalLlmEngine(
                         .build(),
                 )
                 try {
+                    session.addQueryChunk(prompt)
                     val channel = Channel<Pair<String, Boolean>>(Channel.UNLIMITED)
                     suspendCancellableCoroutine<Unit> { cont ->
                         try {
